@@ -1,5 +1,5 @@
 const AppointmentModel=require('../models/appointmentsModel');
-const  createAppointment=async(req,res)=>{
+const  createAppointment=async(req,res,next)=>{
     try{
         const {doctor_id,appointment_date,appointment_time}=req.body;
         const patient_id=req.user.profileId;
@@ -8,7 +8,7 @@ const  createAppointment=async(req,res)=>{
         }
         const existingAppointment =await AppointmentModel.findConflict(doctor_id,appointment_date,appointment_time);
         if(existingAppointment){
-            return res.status(400).json({error:"Doctor is already bookedat this time!"});
+            return res.status(400).json({error:"Doctor is already booked at this time!"});
         }
        const appointmentData={
 doctor_id:parseInt(doctor_id,10),
@@ -23,28 +23,34 @@ status:'pending'
             appointment:newAppointment
                 })
             }catch(err){
-                console.error("Error booking appointment:",err);
-                return res.status(500).json({error:"Database error while booking appointment"});
+               next(err);
             }
         }
-const getAppointments=async(req,res)=>{
+const getAppointments=async(req,res,next)=>{
     try{ 
 const {role,profileId}=req.user;
-const whereClause=role==='doctor'?{doctor_id:profileId}:{};
-const appointments=await AppointmentModel.findAllAppointments({whereClause});
+console.log("logged in role",role);
+
+let whereClause={};
+if(role==='doctor'){
+  whereClause={doctor_id:parseInt(profileId,10)};
+}else if (role==='patient'){
+    whereClause={patient_id:parseInt(profileId,10)};
+}
+
+const appointments=await AppointmentModel.findAllAppointments(whereClause);
 if(appointments.length===0){
     return res.status(404).json({error:"No appointments found"});
 }
 return res.status(200).json(appointments);
 }catch(err){
-console.error("Error fetching appointment",err)
-    res.status(500).json({error:"Database Error while fetching appointments"});
+next(err);
 }
 }
 
-const getAppointmentById=async(req,res)=>{
+const getAppointmentById=async(req,res,next)=>{
     try{
-const{id}=req.params;
+const {id}=req.params;
 const {role,profileId}=req.user;
 const appointment=await AppointmentModel.findAppointmentById(id);
 if(!appointment){
@@ -57,51 +63,52 @@ if(!isAuthorized){
 }
 res.status(200).json({appointment});
 }catch(err){
-        console.error("Error fetching appointment",err);
-        res.status(500).json({error:"Database error while fetching appointment"});
+        next(err);
     }
 }
-const updateAppointment=async(req,res)=>{
+const updateAppointment=async(req,res,next)=>{
     try{
-        const{id}=req.params;
-        const{appointment_date,appointment_time,status}=req.body;
+        const{id}=req.params ;
+        const{appointment_date,appointment_time,status,doctor_id}=req.body;
         const {role,profileId}=req.user;
         const appointment=await AppointmentModel.findAppointmentById(id);
         if(!appointment){
             return res.status(404).json({error:"Appointment not found"});
         }
-        const updateData={};
+        let updatedData={};
 if(role==='patient'){
     if(appointment.patient_id !==profileId){
         return res.status(403).json({message:'Unauthorized to update this appointment'});
     }
-    if(appointment_date)updateData.appointment_date=new Date(appointment_date);
-    if(appointment_time)updateData.appointment_time=appointment_time;
+    if(appointment_date)updatedData.appointment_date=new Date(appointment_date);
+    if(appointment_time)updatedData.appointment_time=appointment_time;
 } else if(role === 'doctor') {
     if(appointment.doctor_id!==profileId){
         return res.status(403).json({message:'Unauthorized to update this appointment'});
     }
-if(status) updateData.status=status;
+if(status) updatedData.status=status;
 } else if (role==='admin'){
-    if(appointment_date)updateData.appointment_date=new Date(appointment_date);
-    if(appointment_time)updateData.appointment_time=appointment_time;
-    if(status) updateData.status =status;
+    if(doctor_id) updatedData.doctor_id=parseInt(doctor_id,10);
+    if(appointment_date)updatedData.appointment_date=new Date(appointment_date);
+    if(appointment_time)updatedData.appointment_time=appointment_time;
+    if(status) updatedData.status =status;
 }
+      const targetDoctorId=updatedData.doctor_id||appointment.doctor_id;
         const parsedDate=appointment_date?new Date(appointment_date):appointment.appointment_date;
         const newTime=appointment_time||appointment.appointment_time;
-        const conflict=await AppointmentModel.findConflictForUpdate(appointment.doctor_id, parsedDate, newTime, id);
+        if(appointment_date|| appointment_time || doctor_id){
+        const conflict=await AppointmentModel.findConflictForUpdate(targetDoctorId, parsedDate, newTime, id);
 if(conflict){
         return res.status(400).json({error:"Doctor is already booked at this new time!"});
 }  
-
-const updatedAppointment=await AppointmentModel.updateAppointment(id, updateData);
+        }
+const updatedAppointment=await AppointmentModel.updateAppointment(id, updatedData);
 return res.status(200).json({message:"Appointment updated successfully",appointment:updatedAppointment});
     }catch(err){
-        console.error("ERROR updating appointment",err);
-        res.status(500).json({error:"Database error while updating appointment"});
+        next(err);
     }
 }
-const deleteAppointment =async(req,res)=>{
+const deleteAppointment =async(req,res,next)=>{
     try{    
     const{id}=req.params;
     const{role,profileId}=req.user;
@@ -117,8 +124,7 @@ const deleteAppointment =async(req,res)=>{
     return res.status(200).json({message:"Appointment deleted successfully"});  
 
     } catch(err){
-        console.error("Error deleting appointment",err);
-        res.status(500).json({error:"Database error while deleting appointment"});
+        next(err);
     }       
 }
 module.exports={createAppointment,getAppointments,getAppointmentById,updateAppointment,deleteAppointment};

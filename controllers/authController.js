@@ -1,42 +1,46 @@
-const prisma=require('../config/prisma');
 const bcrypt=require('bcrypt');
 const jwt=require('jsonwebtoken');
-const register = async (req,res)=>{
+const userModel=require('../models/userModel');
+const doctorModel=require('../models/doctorModel');
+const patientModel=require('../models/patientModel');
+const register = async (req,res,next)=>{
     try{
-        const {email,password,role,name,phone,specialty,medical_history}=req.body;
-        const existingUser=await prisma.users.findUnique({where:{email}});
+        const {email,password,role='patient',username,phone=null,specialty='General',medical_history=null,
+            age=null,gender=null}=req.body;
+            const existingUser=await userModel.findUserByEmail(email);
             if(existingUser){
 return res.status(400).json({error:"Email already exists"});
                             }
-const hashedpassword=await bcrypt.hash(password,10);
-const result=await prisma.$transaction(async(tx)=>{
-const newUser=await tx.users.create({data:{email,password:hashedpassword,role:role||'patient'}});    
-   if(newUser.role==='doctor'){
-        await tx.doctors.create({data:{name:name||'Dr.Anonymous',specialty:specialty||'General',phone:phone||null,user_id:newUser.id}});
-    }else if(newUser.role==='patient'){
-        await tx.patients.create({data:{name:name||'patient name',phone:phone||null,medical_history:medical_history||null,user_id:newUser.id}});
-    }    
-    return newUser; });
-    return res.status(201).json({message:"User registered successfully",user:{id:result.id,email:result.email,role:result.role}});
-    }catch(err){
-        console.error("Error registering user",err);
-        res.status(500).json({error:"Database error while registering user"});
+const hashedPassword=await bcrypt.hash(password,10);
+ const normalizedRole=role?role.toLowerCase():'patient';
+const newUser=await userModel.createUser({email,password:hashedPassword,role: normalizedRole});
+if(normalizedRole==='doctor'){
+    await doctorModel.createDoctor({username,phone,specialty,user_id:newUser.id});}
+    else{
+        await patientModel.createPatient({username,phone,medical_history,age,gender,user_id:newUser.id});
+    }   
+return res.status(201).json({message:"User registered successfully",user:{id:newUser.id,email:newUser.email,role:newUser.role}});
+
+}catch(err){
+       next(err);
     }
 }
-const login=async(req,res)=>{
+const login=async(req,res,next)=>{
     try{
         const{email,password}=req.body;
-        const user=await prisma.users.findFirst({where:{email},include:{doctor:true,patient:true}});
-        if(!user){
+        const user=await userModel.findUserByEmail(email);
+       if(!user||!(await bcrypt.compare(password,user.password))){
             return res.status(400).json({error:"Invalid email or password"});
         }
-        const isMatch=await bcrypt.compare(password,user.password);
-        if(!isMatch){
-            return res.status(400).json({error:"Invalid email or password"});
-        }
-const profileId=user.doctor?.id||user.patient?.id||null;
-
-        const token=jwt.sign(
+let profileId=null;
+if(user.role==='doctor'){
+const doctorObj=user.doctors || user.doctor;        
+profileId=Array.isArray(doctorObj)?doctorObj[0]?.id:doctorObj?.id;
+}else if(user.role==='patient'){
+const patientObj=user.patients || user.patient;
+profileId=Array.isArray(patientObj)?patientObj[0]?.id:patientObj?.id;
+}
+const token=jwt.sign(
             {id:user.id,email:user.email,role:user.role,profileId:profileId},
             process.env.JWT_SECRET,
             {expiresIn:'1h'}
@@ -52,15 +56,14 @@ const profileId=user.doctor?.id||user.patient?.id||null;
             }
         });
     }catch(err){
-        console.error("Error logging in user",err);
-        res.status(500).json({error:"Database error occurred"});
+        next(err);
     }
 }
-const logout=async(req,res)=>{
+const logout=async(req,res,next)=>{
     try{
 return res.status(200).json({message:"logout successful!"});
 }catch(err){
-    console.error("Error logging out:",err);
+    next(err);
 }
 }
 module.exports={register,login,logout};

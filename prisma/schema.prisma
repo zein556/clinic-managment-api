@@ -5,12 +5,23 @@ generator client {
   provider = "postgresql"
  url       =  env("DATABASE_URL")
  }
+enum Role{
+admin
+doctor
+patient
 
+}
+enum AppointmentStatus{
+pending
+confirmed
+cancelled
+completed
+}
  model appointments {
   id               Int       @id @default(autoincrement())
  appointment_date  DateTime
  appointment_time  String
- status            String     @default("pending")
+ status            AppointmentStatus     @default(pending)
  doctor_id         Int
  doctor            doctors     @relation(fields:[doctor_id],references:[id],onDelete:Cascade)
  patient_id         Int
@@ -31,7 +42,7 @@ generator client {
   id           Int            @id @default(autoincrement())
   email        String?        @unique
   password     String
-  role         String?         //'doctor'  | 'patient' | 'admin'
+  role         Role           @default(patient)
   createdAt   DateTime        @default(now())
  doctor         doctors?
  patient        patients?
@@ -40,7 +51,9 @@ generator client {
  id           Int              @id @default(autoincrement())
  name         String
  phone        String?
+ age          Int?
  medical_history String?
+ gender       String?
  user_id      Int              @unique
  user         users            @relation(fields:[user_id],references:[id],onDelete:Cascade)  
  appointments    appointments[]

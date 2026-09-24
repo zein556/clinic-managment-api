@@ -1,111 +1,71 @@
-const prisma=require('../config/prisma');
-const getDoctors=async(req,res)=>{
+const doctorModel=require('../models/doctorModel');
+const userModel=require('../models/userModel');
+const bcrypt=require('bcrypt');
+const getDoctors=async(req,res,next)=>{
 try{
-const doctors=await prisma.doctors.findMany({
-    orderBy:{id:'asc'},
-    include:{
-        user:{
-            select:{email:true}
-        }
-    }
-});     
+const doctors=await doctorModel.findAllDoctors();
 return res.status(200).json({doctors});
 }catch(err){
-            console.error("Error fetching doctors",err);
-            return res.status(500).json({error:"Database error while fetching doctors"});
+next(err);
         }
-        
-        }
-    
-const getDoctorById=async(req,res)=>{
+}
+const getDoctorById=async(req,res,next)=>{
     try{
 const {id}=req.params;
-const doctor=await prisma.doctors.findUnique({where:{id:parseInt(id)}});
+const doctor=await doctorModel.findDoctorById(parseInt(id));
 if(!doctor){
     return res.status(404).json({error:"Doctor not found"});
 }
 return res.status(200).json({doctor});
     }catch(err){
-        console.error("Error fetching doctor",err);
-        return res.status(500).json({error:"Database error while fetching doctor"});
-    } 
+      next(err);
 }
-const getDoctorBySpecialty=async(req,res)=>{
-    try{
-        const{specialty}=req.params;
-        const doctors=await prisma.doctors.findMany({where:{
-            specialty:{
-                contains:specialty,
-                mode:'insensitive'
-            }
-        },
-    orderBy:{id:'asc'}
-    });
-        if(doctors.length===0){
-            return res.status(404).json({error:"No doctors found for this specialty"});
-        }
-        return res.status(200).json({doctors});
-    }catch(err){
-        console.error("ERROR fetching doctors by specialty:",err);
-        return res.status(500).json({error:"Database error while fetching doctors"});
-    }
-}
-const createDoctor=async(req,res)=>{
+}        
+const createDoctor=async(req,res,next)=>{
 try{
-    const{name,specialty,phone,user_id}=req.body;
-if(!name||!specialty||!user_id){
-    return res.status(400).json({error:"Name,specialty and user_id are required"});
-}
-const newdoctor=await prisma.doctors.create({data:
-    {name,
-    specialty,
-    phone,
-user_id:parseInt(user_id)}
-});
-return res.status(201).json({message:"Doctor created successfully",doctor:newdoctor});
+    const{username,specialty,phone,email,password}=req.body;
+    const existingUser=await userModel.findUserByEmail(email);
+    if(existingUser){
+        return res.status(400).json({error:"Email already exists"});
+    }
+    const hashedPassword=await bcrypt.hash(password,10);
+    const newUser=await userModel.createUser({
+        email,
+        password:hashedPassword,
+        role:'doctor'
+    });
+    const newDoctor=await doctorModel.createDoctor({
+        name:username ,
+        specialty,
+        phone,
+        user_id:newUser.id
+    });
+        return res.status(201).json({message:"Doctor created successfully",doctor:newDoctor});
 
 }catch(err){
-    console.error("ERROR creating doctor",err);
-    return res.status(500).json({error:"Database error while creating doctor"});
+  next(err);
 }
 }
-const updateDoctor=async(req,res)=>{
+const updateDoctor=async(req,res,next)=>{
 try{
     const{id}=req.params;
-    const{name,specialty,phone}=req.body;
-    const doctor_id=parseInt(id,10);
-    if(isNaN(doctor_id)){
-        return res.status(400).json({error:"Invalid doctor Id"});
-    }
-    const existingDoctor=await prisma.doctors.findUnique({
-        where:{id:doctor_id}
-    });
-    if(!existingDoctor){
-        return res.status(404).json({error:"Doctor not found"});
-    }
-    const updatedDoctor=await prisma.doctors.update({where:{id:doctor_id},data:{ ...(name&&{name}),...(specialty&&{specialty}),...(phone && {phone})}});
-res.status(200).json({message:"Doctor updated successfully",doctor:updatedDoctor});
+   const updatedDoctor=await doctorModel.updateDoctor(id,req.body);
+   return res.status(200).json({message:"Doctor profile updated",doctor:updatedDoctor}); 
 }catch(err){
-    console.error("ERROR updating doctor",err);
-    return res.status(500).json({error:"Database error while updating doctor"});
+    next(err);
 }
 }
-const deleteDoctor=async(req,res)=>{
+const deleteDoctor=async(req,res,next)=>{
     try{
         const{id}=req.params;
-        const doctor_id=parseInt(id,10);
-        if(isNaN(doctor_id)){
-            return res.status(400).json({error:"Invalid doctor ID"});
-        }
-        const existingDoctor=await prisma.doctors.findUnique({where:{id:doctor_id}});
-        if(!existingDoctor){
+        const doctor=await doctorModel.findDoctorById(id);
+        if(!doctor){
             return res.status(404).json({error:"Doctor not found"});
         }
-        await prisma.doctors.delete({where:{id:doctor_id}});
-       return res.status(200).json({message:"Doctor deleted successfully",doctor:existingDoctor});
+        await doctorModel.deleteDoctor(id);
+        return res.status(200).json({message:"Doctor deleted successfully",doctor});
     }catch(err){
-        console.error("ERROR deleting doctor",err);
-        return res.status(500).json({error:"Database error while deleting doctor"});
+        next(err);
     }
 }
-module.exports={getDoctors,getDoctorById,getDoctorBySpecialty,createDoctor,updateDoctor,deleteDoctor};
+module.exports={getDoctors,getDoctorById,createDoctor,updateDoctor,deleteDoctor};

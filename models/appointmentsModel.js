@@ -9,13 +9,12 @@ const findConflict=async(doctor_id,appointment_date,appointment_time)=>{
         }
     });
 }
-const createAppointment=async(appointmentData
-)=>{
+const createAppointment=async(appointmentData)=>{
     return await prisma.appointments.create({
         data:appointmentData
     });
 }   
-const findAllAppointments =async(whereClause)=>{
+const findAllAppointments =async(whereClause={})=>{
     return await prisma.appointments.findMany({
         where:whereClause,
         orderBy:{id:'asc'},
