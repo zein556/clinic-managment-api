@@ -27,6 +27,8 @@ completed
  patient_id         Int
  patient           patients   @relation(fields:[patient_id],references:[id],onDelete:Cascade)
  createdAt         DateTime   @default(now())
+ medicalRecord     MedicalRecord?
+ 
  }
  model doctors {
   id           Int            @id @default(autoincrement())
@@ -57,4 +59,27 @@ completed
  user_id      Int              @unique
  user         users            @relation(fields:[user_id],references:[id],onDelete:Cascade)  
  appointments    appointments[]
+ }
+ model MedicalRecord{
+id            Int              @id @default(autoincrement())
+appointment_id   Int           @unique
+patient_id      Int            
+doctor_id       Int
+diagnosis        String
+notes            String?
+createdAt        DateTime       @default(now())
+
+appointment      appointments  @relation(fields:[appointment_id],references:[id],onDelete:Cascade)
+prescriptions    Prescription[]
+ }
+
+ model Prescription{
+id         Int      @id @default(autoincrement())
+medical_record_id    Int
+medication_name     String
+dosage              String
+instructions        String?
+
+medicalRecord   MedicalRecord   @relation(fields:[medical_record_id],references:[id],onDelete:Cascade)
+
  }

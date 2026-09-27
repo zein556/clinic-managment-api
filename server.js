@@ -6,6 +6,7 @@ const doctorsRoutes=require('./routes/doctorsRoutes');
 const appointmentsRoutes=require('./routes/appointmentsRoutes');
 const authRoutes=require('./routes/authRoutes');
 const patientsRoutes=require('./routes/patientsRoutes');
+const medicalRecordRoutes=require('./routes/medicalRecordRoutes');
 const PORT=process.env.PORT||4000;
 
 
@@ -16,6 +17,7 @@ app.use('/doctors',doctorsRoutes);
 app.use('/appointments',appointmentsRoutes);
 app.use('/auth',authRoutes);
 app.use('/patients',patientsRoutes);
+app.use('/medicalRecords',medicalRecordRoutes);
 app.use((req,res,next)=>{
     const error=new Error(`Cannot find ${req.originalUrl} on this server!`);
     error.statusCode=404;
@@ -26,4 +28,3 @@ app.use(errorMiddleware);
 app.listen(PORT,()=>{
     console.log(`server is running perfectly on port ${PORT}`);
 });
-
