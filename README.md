@@ -1,6 +1,6 @@
 # 🏥 Clinic Management System API
 
-A robust RESTful Backend API built with Node.js, Express, Prisma ORM, and PostgreSQL for managing medical clinics, doctors, patients, and appointment bookings with role-based access control (RBAC).
+A robust RESTful Backend API built with Node.js, Express, Prisma ORM, and PostgreSQL for managing medical clinics, doctors, patients,  appointment bookings,and medical records with prescriptions under role-based access control (RBAC).
 
 ---
 
