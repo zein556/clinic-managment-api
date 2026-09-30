@@ -7,7 +7,7 @@ const { validateRegisterUser, validateLoginUser } = require('../validator/authVa
 /**
  * @swagger
  * tags:
- *   name: Auth
+ *   username: Auth
  *   description: Authentication and user account management
  */
 /**
@@ -26,9 +26,9 @@ const { validateRegisterUser, validateLoginUser } = require('../validator/authVa
  *             required:
  *               - email
  *               - password
- *               - name
+ *               - username
  *             properties:
- *               name:
+ *               username:
  *                 type: string
  *                 example: John Doe
  *               email:
@@ -79,7 +79,7 @@ router.post('/register', validateRegisterUser, validationMiddleware, authControl
  *               password:
  *                 type: string
  *                 format: password
- *                 example: "Password@123!"
+ *                 example: "Password123"
  *     responses:
  *       200:
  *         description: Login Successful,returns authentication token
