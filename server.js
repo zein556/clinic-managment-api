@@ -7,12 +7,14 @@ const appointmentsRoutes=require('./routes/appointmentsRoutes');
 const authRoutes=require('./routes/authRoutes');
 const patientsRoutes=require('./routes/patientsRoutes');
 const medicalRecordRoutes=require('./routes/medicalRecordRoutes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const PORT=process.env.PORT||4000;
 
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
-
+app.use('/api-docs', swaggerUi.serve,swaggerUi.setup(swaggerSpec));
 app.use('/doctors',doctorsRoutes);
 app.use('/appointments',appointmentsRoutes);
 app.use('/auth',authRoutes);
