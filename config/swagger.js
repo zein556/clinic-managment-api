@@ -10,7 +10,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:4000', 
+        url: 'https://clinic-managment-api-l511.onrender.com', 
         description: 'Development Server',
       },
     ],
