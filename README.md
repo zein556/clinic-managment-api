@@ -87,7 +87,7 @@ http://localhost:4000/api-docs
 - Nodemon
 
 ## 📁 Project Structure
-
+```text
 clinic-managment-api/
 │
 ├── config/
@@ -131,7 +131,7 @@ clinic-managment-api/
 ├── package.json
 ├── package-lock.json
 └── README.md
-
+```
 ## 🔑 Authentication
 
 The API uses JWT Bearer Authentication.
