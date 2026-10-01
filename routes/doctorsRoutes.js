@@ -62,12 +62,12 @@ router.get('/:id', doctorsController.getDoctorById);
  *             type: object
  *             required:
  *               - name
- *               - specialization
+ *               - specialty
  *             properties:
  *               name:
  *                 type: string
  *                 example: "Dr.Zein"
- *               specialization:
+ *               specialty:
  *                 type: string
  *                 example: "Cardiology"
  *               phone:
@@ -109,7 +109,7 @@ router.post('/', authenticateToken, checkRole(['admin']), createDoctorValidator,
  *             properties:
  *               name:
  *                 type: string
- *               specialization:
+ *               specialty:
  *                 type: string
  *               phone:
  *                 type: string

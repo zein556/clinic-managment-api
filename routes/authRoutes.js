@@ -54,7 +54,6 @@ router.post(
   authController.register
 );
 
-router.post('/register', validateRegisterUser, validationMiddleware, authController.register);
 
 /**
  * @swagger

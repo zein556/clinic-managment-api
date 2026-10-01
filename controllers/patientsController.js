@@ -15,7 +15,7 @@
                 role:'patient'
             });
             const newPatient=await patientModel.createPatient({
-                name,
+                username,
                 phone,
                 age,
                 gender,
