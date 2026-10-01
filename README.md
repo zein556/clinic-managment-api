@@ -1,38 +1,45 @@
 # 🏥 Clinic Management System API
 
-A robust RESTful Backend API built with Node.js, Express, Prisma ORM, and PostgreSQL for managing medical clinics, doctors, patients,  appointment bookings,and medical records with prescriptions under role-based access control (RBAC).
+A robust RESTful API built with Node.js, Express, Prisma ORM, and PostgreSQL for managing clinic operations, patient records, appointments, and authentication.
+
+---
+
+## 🚀 Live Demo & API Documentation
+
+- Swagger Documentation: [https://clinic-managment-api-1511.onrender.com/api-docs](https://clinic-managment-api-1511.onrender.com/api-docs)
+- Base URL: https://clinic-managment-api-1511.onrender.com
+
+---
+
+## ✨ Features
+
+- 🔐 Authentication & Authorization: Secure user registration, login, and JWT-based authentication with role management (Patients, Doctors, Admins).
+- 📅 Appointment Management: Schedule, update, and track patient appointments.
+- 👨‍⚕️ Doctor & Patient Records: Manage detailed profiles for doctors and patients.
+- 📜 Interactive API Docs: Built-in Swagger UI for testing endpoints directly.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- Runtime Environment: Node.js
-- Framework: Express.js
-- Database ORM: Prisma ORM
+- Backend: Node.js, Express.js
 - Database: PostgreSQL
-- Authentication: JSON Web Tokens (JWT) & Bcrypt
-- Validation: Express-Validator
-- API Testing & Documentation: Postman
+- ORM: Prisma
+- Documentation: Swagger (OpenAPI 3.0)
+- Deployment: Render Web Service & Render Managed PostgreSQL
 
 ---
 
-## ✨ Key Features
-
-- Authentication & Authorization: Secure registration and login supporting multiple user roles (Admin, Doctor, Patient).
-- Doctor & Patient Management: Automated user profile linkage and primary key mapping upon creation.
-- Role-Based Appointments: Custom scoping for fetching appointments based on logged-in identity (Doctors see their schedule, Patients see their bookings, Admin gets full access).
-- Data Validation & Error Handling: Comprehensive request sanitization and global error handling middlewares.
-- API Testing: Verified and debugged CRUD operations and relation mappings using Postman.
-
----
-
-## 🚀 Getting Started
+## 📦 Getting Started Locally
 
 ### Prerequisites
+
 - Node.js (v18+)
-- PostgreSQL installed and running
+- PostgreSQL installed locally or a remote connection string.
 
 ### Installation
 
-   git clone [https://github.com/zein556/clinic-managment-api.git]
+1. Clone the repository:
+   `bash
+   git clone [https://github.com/zein556/clinic-managment-api.git](https://github.com/zein556/clinic-managment-api.git)
    cd clinic-managment-api
