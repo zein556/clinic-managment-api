@@ -14,7 +14,7 @@ const createPatient=async(patientData)=>{
 const findAllPatients=async()=>{
     return await prisma.patients.findMany({
         include:{
-            user:{select:{id:true,name:true,email:true}}
+            user:{select:{id:true,email:true}}
         }
     });
 }
@@ -22,7 +22,7 @@ const findPatientById=async(id)=>{
     return await prisma.patients.findUnique({
         where:{id:parseInt(id,10)},
         include:{
-            user:{select:{id:true,name:true,email:true}}
+            user:{select:{id:true,email:true}}
         }
     });
 }

@@ -64,7 +64,7 @@ router.get('/:id', doctorsController.getDoctorById);
  *               - name
  *               - specialty
  *             properties:
- *               name:
+ *               username:
  *                 type: string
  *                 example: "Dr.Zein"
  *               specialty:
@@ -107,7 +107,7 @@ router.post('/', authenticateToken, checkRole(['admin']), createDoctorValidator,
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               username:
  *                 type: string
  *               specialty:
  *                 type: string

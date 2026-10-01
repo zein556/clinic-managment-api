@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const {
   createAppointment,
   getAppointments,
@@ -10,7 +11,10 @@ const {
 
 const { authenticateToken } = require('../middlewares/authMiddleware');
 const checkRole = require('../middlewares/roleMiddleware');
-const { validateUpdateAppointment } = require('../validator/appointmentValidator');
+
+const {
+  validateUpdateAppointment
+} = require('../validator/appointmentValidator');
 
 /**
  * @swagger
@@ -33,23 +37,36 @@ const { validateUpdateAppointment } = require('../validator/appointmentValidator
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - doctor_id
+ *               - appointment_date
+ *               - appointment_time
  *             properties:
- *               doctorId:
+ *               doctor_id:
  *                 type: integer
- *               date:
+ *                 example: 1
+ *               appointment_date:
  *                 type: string
  *                 format: date-time
- *               reason:
+ *                 example: "2026-10-05T00:00:00.000Z"
+ *               appointment_time:
  *                 type: string
+ *                 example: "10:40:00"
+ *             
  *     responses:
  *       201:
  *         description: Appointment Created Successfully
  *       400:
  *         description: Invalid input data
  *       401:
- *         description: Unauthorized - Invalid or missing
+ *         description: Unauthorized - Invalid or missing token
  */
-router.post('/', authenticateToken, checkRole(['patient']), createAppointment);
+router.post(
+  '/',
+  authenticateToken,
+  checkRole(['patient']),
+  createAppointment
+);
 
 /**
  * @swagger
@@ -65,7 +82,11 @@ router.post('/', authenticateToken, checkRole(['patient']), createAppointment);
  *       401:
  *         description: Unauthorized
  */
-router.get('/', authenticateToken, getAppointments);
+router.get(
+  '/',
+  authenticateToken,
+  getAppointments
+);
 
 /**
  * @swagger
@@ -88,13 +109,17 @@ router.get('/', authenticateToken, getAppointments);
  *       404:
  *         description: Appointment Not Found
  */
-router.get('/:id', authenticateToken, getAppointmentById);
+router.get(
+  '/:id',
+  authenticateToken,
+  getAppointmentById
+);
 
 /**
  * @swagger
  * /appointments/{id}:
  *   put:
- *     summary: Updated an existing appointment
+ *     summary: Update an existing appointment
  *     tags: [Appointments]
  *     security:
  *       - bearerAuth: []
@@ -112,19 +137,35 @@ router.get('/:id', authenticateToken, getAppointmentById);
  *           schema:
  *             type: object
  *             properties:
- *               date:
+ *               doctor_id:
+ *                 type: integer
+ *                 example: 1
+ *               appointment_date:
  *                 type: string
  *                 format: date-time
+ *                 example: "2026-10-05T00:00:00.000Z"
+ *               appointment_time:
+ *                 type: string
+ *                 example: "14:30:00"
  *               status:
  *                 type: string
+ *                 example: confirmed
  *     responses:
  *       200:
  *         description: Appointment Updated Successfully
  *       400:
  *         description: Invalid parameters
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Appointment Not Found
  */
-router.put('/:id', authenticateToken, validateUpdateAppointment, updateAppointment);
-
+router.put(
+  '/:id',
+  authenticateToken,
+  validateUpdateAppointment,
+  updateAppointment
+);
 /**
  * @swagger
  * /appointments/{id}:
@@ -143,9 +184,15 @@ router.put('/:id', authenticateToken, validateUpdateAppointment, updateAppointme
  *     responses:
  *       200:
  *         description: Appointment Deleted Successfully
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Appointment Not Found
  */
-router.delete('/:id', authenticateToken, deleteAppointment);
+router.delete(
+  '/:id',
+  authenticateToken,
+  deleteAppointment
+);
 
 module.exports = router;

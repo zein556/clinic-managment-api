@@ -12,7 +12,7 @@ const register = async (req,res,next)=>{
 return res.status(400).json({error:"Email already exists"});
                             }
 const hashedPassword=await bcrypt.hash(password,10);
- const normalizedRole='patient';
+ const normalizedRole=role.toLowerCase() || 'patient';
 const newUser=await userModel.createUser({email,password:hashedPassword,role: normalizedRole});
 if(normalizedRole==='doctor'){
     await doctorModel.createDoctor({username,phone,specialty,user_id:newUser.id});}

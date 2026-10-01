@@ -48,7 +48,7 @@ const findPatientByUserId =async(userId)=>{
 
 const getRecordByAppointmentId=async(appointment_id)=>{
     return await prisma.medicalRecord.findUnique({
-        where:{appointment_id:appointment_id},
+        where:{appointment_id:parseInt(appointment_id,10)},
         include:{
             prescriptions:true
         }
