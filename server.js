@@ -26,7 +26,9 @@ app.use((req,res,next)=>{
     next(error);
 });
 app.use(errorMiddleware);
-
-app.listen(PORT,()=>{
-    console.log(`server is running perfectly on port ${PORT}`);
-});
+if(require.main===module){
+    app.listen(PORT,()=>{
+        console.log(`server is running perfectly on port ${PORT}`);
+    });
+}
+module.exports=app;

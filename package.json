@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "_comment_test": "echo \"Error: no test specified\" && exit 1",
-    "test": "node --test"
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -28,6 +28,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "jest": "^30.5.2",
     "prisma": "^6.19.3",
     "supertest": "^7.3.0"
   }
