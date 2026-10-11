@@ -35,8 +35,13 @@ completed
   name         String         @db.VarChar(100)
   specialty    String         @db.VarChar(100)
   phone        String?
+  clinic_id    Int?
+ clinic_address  String?
+ latitude      Float?
+ longitude     Float?
   user_id      Int            @unique
   user         users          @relation(fields:[user_id],references:[id],onDelete:Cascade)
+  clinic       clinics?       @relation(fields:[clinic_id],references:[id],onDelete:SetNull)
   appointments appointments[]
  }
 
@@ -48,6 +53,7 @@ completed
   createdAt   DateTime        @default(now())
  doctor         doctors?
  patient        patients?
+ notifications  Notification[]
  }
  model patients{
  id           Int              @id @default(autoincrement())
@@ -83,3 +89,22 @@ instructions        String?
 medicalRecord   MedicalRecord   @relation(fields:[medical_record_id],references:[id],onDelete:Cascade)
 
  }
+ model Notification{
+id         Int    @id @default(autoincrement())
+user_id    Int    
+title      String
+message    String
+type       String
+is_read    Boolean   @default(false)
+createdAt  DateTime   @default (now())
+user       users      @relation(fields:[user_id],references:[id],onDelete:Cascade)
+
+ }
+model clinics {
+  id        Int       @id @default(autoincrement())
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  doctors   doctors[]
+}

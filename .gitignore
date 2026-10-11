@@ -1,8 +1,13 @@
-node_modules
+node_modules/
 .env
-
 generated/
 .agents/
 .claude/
 .windsurf/
 skills-lock.json
+
+# Local database helper scripts
+seedClinic.js
+migrateClinicData.js
+checkClinic.js
+

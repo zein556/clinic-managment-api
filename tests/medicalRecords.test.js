@@ -2,8 +2,11 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 
 jest.mock('../models/medicalRecordModel');
+jest.mock('../models/NotificationModel');
 
 const medicalRecordModel = require('../models/medicalRecordModel');
+const notificationModel = require('../models/NotificationModel');
+
 const app = require('../server');
 
 const createToken = (role, userId = 1) => {
@@ -47,12 +50,19 @@ describe('Medical Records API', () => {
                 patient_id: 2,
                 doctor_id: 10,
                 diagnosis: 'Acute Pharyngitis',
-                notes: 'Prescribed rest'
+                notes: 'Prescribed rest',
+                prescriptions: []
             });
+
+            notificationModel.createNotificationForPatient
+                .mockResolvedValue({});
 
             const response = await request(app)
                 .post('/medicalRecords')
-                .set('Authorization', `Bearer ${createToken('doctor', 1)}`)
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('doctor', 1)}`
+                )
                 .send({
                     appointment_id: 5,
                     diagnosis: 'Acute Pharyngitis',
@@ -60,65 +70,218 @@ describe('Medical Records API', () => {
                 });
 
             expect(response.statusCode).toBe(201);
-            expect(response.body.message).toBe('Medical record created successfully');
+
+            expect(response.body.message).toBe(
+                'Medical record created successfully'
+            );
+
             expect(response.body.data.id).toBe(1);
 
-            expect(medicalRecordModel.findAppointmentWithDoctor).toHaveBeenCalledWith(5);
-            expect(medicalRecordModel.findDoctorByUserId).toHaveBeenCalledWith(1);
-            expect(medicalRecordModel.createRecord).toHaveBeenCalled();
+            expect(
+                medicalRecordModel.findAppointmentWithDoctor
+            ).toHaveBeenCalledWith(5);
+
+            expect(
+                medicalRecordModel.findDoctorByUserId
+            ).toHaveBeenCalledWith(1);
+
+            expect(
+                medicalRecordModel.createRecord
+            ).toHaveBeenCalled();
+
+            // Medical Record notification
+            expect(
+                notificationModel.createNotificationForPatient
+            ).toHaveBeenCalledWith(
+                2,
+                'Medical Record Updated',
+                'A new medical record has been added to your account.',
+                'medical_record_created'
+            );
+
+            // No prescription notification because
+            // no prescriptions were provided
+            expect(
+                notificationModel.createNotificationForPatient
+            ).toHaveBeenCalledTimes(1);
         });
 
-        test('should return 404 if appointment is not found', async () => {
-            medicalRecordModel.findAppointmentWithDoctor.mockResolvedValue(null);
+        test('should create prescription notification when prescriptions are provided', async () => {
+            medicalRecordModel.findAppointmentWithDoctor.mockResolvedValue({
+                id: 5,
+                doctor_id: 10,
+                patient_id: 2
+            });
+
+            medicalRecordModel.findDoctorByUserId.mockResolvedValue({
+                id: 10,
+                user_id: 1
+            });
+
+            const prescriptions = [
+                {
+                    medication: 'Paracetamol',
+                    dosage: '500mg',
+                    frequency: '3 times daily'
+                }
+            ];
+            medicalRecordModel.createRecord.mockResolvedValue({
+                id: 1,
+                appointment_id: 5,
+                patient_id: 2,
+                doctor_id: 10,
+                diagnosis: 'Flu',
+                notes: 'Rest',
+                prescriptions
+            });
+
+            notificationModel.createNotificationForPatient
+                .mockResolvedValue({});
 
             const response = await request(app)
                 .post('/medicalRecords')
-                .set('Authorization', `Bearer ${createToken('doctor', 1)}`)
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('doctor', 1)}`
+                )
+                .send({
+                    appointment_id: 5,
+                    diagnosis: 'Flu',
+                    notes: 'Rest',
+                    prescriptions
+                });
+
+            expect(response.statusCode).toBe(201);
+
+            expect(
+                medicalRecordModel.createRecord
+            ).toHaveBeenCalledWith(
+                {
+                    appointment_id: 5,
+                    patient_id: 2,
+                    doctor_id: 10,
+                    diagnosis: 'Flu',
+                    notes: 'Rest'
+                },
+                prescriptions
+            );
+
+            // Medical Record notification
+            expect(
+                notificationModel.createNotificationForPatient
+            ).toHaveBeenCalledWith(
+                2,
+                'Medical Record Updated',
+            'A new medical record has been added to your account.',
+            'medical_record_created'
+            );
+
+            // Prescription notification
+            expect(
+                notificationModel.createNotificationForPatient
+            ).toHaveBeenCalledWith(
+                2,
+                'New Prescription',
+                'A new Prescription has been added to your medical record.',
+                'prescription_created'
+            );
+
+            // Two notifications in total
+            expect(
+                notificationModel.createNotificationForPatient
+            ).toHaveBeenCalledTimes(2);
+        });
+
+        test('should return 404 if appointment is not found', async () => {
+            medicalRecordModel.findAppointmentWithDoctor
+                .mockResolvedValue(null);
+
+            const response = await request(app)
+                .post('/medicalRecords')
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('doctor', 1)}`
+                )
                 .send({
                     appointment_id: 999,
                     diagnosis: 'Flu'
                 });
 
             expect(response.statusCode).toBe(404);
-            expect(response.body.message).toBe('Appointment not found');
-            expect(medicalRecordModel.createRecord).not.toHaveBeenCalled();
+
+            expect(response.body.message).toBe(
+                'Appointment not found'
+            );
+
+            expect(
+                medicalRecordModel.createRecord
+            ).not.toHaveBeenCalled();
+
+            expect(
+                notificationModel.createNotificationForPatient
+            ).not.toHaveBeenCalled();
         });
 
         test('should return 403 if doctor is not assigned to this appointment', async () => {
-            medicalRecordModel.findAppointmentWithDoctor.mockResolvedValue({
-                id: 5,
-                doctor_id: 99, 
-                patient_id: 2
-            });
+            medicalRecordModel.findAppointmentWithDoctor
+                .mockResolvedValue({
+                    id: 5,
+                    doctor_id: 99,
+                    patient_id: 2
+                });
 
-            medicalRecordModel.findDoctorByUserId.mockResolvedValue({
-                id: 10, // الطبيب الذي يجري الطلب
-                user_id: 1
-            });
+            medicalRecordModel.findDoctorByUserId
+                .mockResolvedValue({
+                    id: 10,
+                    user_id: 1
+                });
 
             const response = await request(app)
                 .post('/medicalRecords')
-                .set('Authorization', `Bearer ${createToken('doctor', 1)}`)
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('doctor', 1)}`
+                )
                 .send({
                     appointment_id: 5,
                     diagnosis: 'Flu'
                 });
 
             expect(response.statusCode).toBe(403);
-            expect(response.body.message).toBe('Unauthorized to add record for this appointment');
-            expect(medicalRecordModel.createRecord).not.toHaveBeenCalled();
+
+            expect(response.body.message).toBe(
+                'Unauthorized to add record for this appointment'
+            );
+            expect(
+                medicalRecordModel.createRecord
+            ).not.toHaveBeenCalled();
+
+            expect(
+                notificationModel.createNotificationForPatient
+            ).not.toHaveBeenCalled();
         });
+
         test('should return 403 when patient tries to create a record', async () => {
             const response = await request(app)
                 .post('/medicalRecords')
-                .set('Authorization', `Bearer ${createToken('patient', 1)}`)
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('patient', 1)}`
+                )
                 .send({
                     appointment_id: 5,
                     diagnosis: 'Self diagnosis'
                 });
 
             expect(response.statusCode).toBe(403);
-            expect(medicalRecordModel.createRecord).not.toHaveBeenCalled();
+
+            expect(
+                medicalRecordModel.createRecord
+            ).not.toHaveBeenCalled();
+
+            expect(
+                notificationModel.createNotificationForPatient
+            ).not.toHaveBeenCalled();
         });
 
         test('should return 401 when no token is provided', async () => {
@@ -130,43 +293,75 @@ describe('Medical Records API', () => {
                 });
 
             expect(response.statusCode).toBe(401);
-            expect(medicalRecordModel.createRecord).not.toHaveBeenCalled();
+
+            expect(
+                medicalRecordModel.createRecord
+            ).not.toHaveBeenCalled();
+
+            expect(
+                notificationModel.createNotificationForPatient
+            ).not.toHaveBeenCalled();
         });
     });
 
     // -------------------------------------------------------------
-    // 2. GET /medicalRecords/patient/:patient_id - Get Patient History
+    // 2. GET /medicalRecords/patient/:patient_id
     // -------------------------------------------------------------
     describe('GET /medicalRecords/patient/:patient_id', () => {
 
         test('should return patient history for doctor or admin', async () => {
             medicalRecordModel.getPatientHistory.mockResolvedValue([
-                { id: 1, diagnosis: 'Flu', patient_id: 2 },
-                { id: 2, diagnosis: 'Cold', patient_id: 2 }
+                {
+                    id: 1,
+                    diagnosis: 'Flu',
+                    patient_id: 2
+                },
+                {
+                    id: 2,
+                    diagnosis: 'Cold',
+                    patient_id: 2
+                }
             ]);
 
             const response = await request(app)
                 .get('/medicalRecords/patient/2')
-                .set('Authorization', `Bearer ${createToken('doctor', 1)}`);
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('doctor', 1)}`
+                );
 
             expect(response.statusCode).toBe(200);
+
             expect(response.body.data).toHaveLength(2);
-            expect(medicalRecordModel.getPatientHistory).toHaveBeenCalledWith('2');
+
+            expect(
+                medicalRecordModel.getPatientHistory
+            ).toHaveBeenCalledWith('2');
         });
 
         test('should return 403 if patient tries to access another patient history', async () => {
-            medicalRecordModel.findPatientByUserId.mockResolvedValue({
-                id: 1, // المريض الحقيقي صاحب الحساب
-                user_id: 1
-            });
+            medicalRecordModel.findPatientByUserId
+                .mockResolvedValue({
+                    id: 1,
+                    user_id: 1
+                });
 
             const response = await request(app)
-                .get('/medicalRecords/patient/99') // يحاول الوصول لسجل مريض آخر رقم 99
-                .set('Authorization', `Bearer ${createToken('patient', 1)}`);
+                .get('/medicalRecords/patient/99')
+                .set(
+                    'Authorization',
+                   `Bearer ${createToken('patient', 1)}`
+                );
 
             expect(response.statusCode).toBe(403);
-            expect(response.body.message).toBe('Access denied to this record history');
-            expect(medicalRecordModel.getPatientHistory).not.toHaveBeenCalled();
+
+            expect(response.body.message).toBe(
+                'Access denied to this record history'
+            );
+
+            expect(
+                medicalRecordModel.getPatientHistory
+            ).not.toHaveBeenCalled();
         });
     });
 
@@ -176,30 +371,44 @@ describe('Medical Records API', () => {
     describe('GET /medicalRecords/appointment/:appointment_id', () => {
 
         test('should return record by appointment ID', async () => {
-            medicalRecordModel.getRecordByAppointmentId.mockResolvedValue({
-                id: 1,
-                appointment_id: 5,
-                diagnosis: 'Acute Pharyngitis'
-            });
-
-            const response = await request(app)
+            medicalRecordModel.getRecordByAppointmentId
+                .mockResolvedValue({
+                    id: 1,
+                    appointment_id: 5,
+                    diagnosis: 'Acute Pharyngitis'
+                });
+                const response = await request(app)
                 .get('/medicalRecords/appointment/5')
-                .set('Authorization', `Bearer ${createToken('doctor', 1)}`);
+                .set(
+                    'Authorization',
+                   `Bearer ${createToken('doctor', 1)}`
+                );
 
             expect(response.statusCode).toBe(200);
+
             expect(response.body.data.id).toBe(1);
-            expect(medicalRecordModel.getRecordByAppointmentId).toHaveBeenCalledWith('5');
+
+            expect(
+                medicalRecordModel.getRecordByAppointmentId
+            ).toHaveBeenCalledWith('5');
         });
 
         test('should return 404 if record for appointment is not found', async () => {
-            medicalRecordModel.getRecordByAppointmentId.mockResolvedValue(null);
+            medicalRecordModel.getRecordByAppointmentId
+                .mockResolvedValue(null);
 
             const response = await request(app)
                 .get('/medicalRecords/appointment/999')
-                .set('Authorization', `Bearer ${createToken('doctor', 1)}`);
+                .set(
+                    'Authorization',
+                    `Bearer ${createToken('doctor', 1)}`
+                );
 
             expect(response.statusCode).toBe(404);
-            expect(response.body.message).toBe('Medical record not found for this appointment');
+
+            expect(response.body.message).toBe(
+                'Medical record not found for this appointment'
+            );
         });
     });
 

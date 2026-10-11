@@ -9,17 +9,23 @@ const patientsRoutes=require('./routes/patientsRoutes');
 const medicalRecordRoutes=require('./routes/medicalRecordRoutes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
+const notificationRoutes=require('./routes/notificationRoutes');
+const clinicRoutes=require('./routes/clinicRoutes');
+const {generalLimiter}=require('./middlewares/ratelimitMiddleware');
 const PORT=process.env.PORT||4000;
 
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(generalLimiter);
 app.use('/api-docs', swaggerUi.serve,swaggerUi.setup(swaggerSpec));
 app.use('/doctors',doctorsRoutes);
 app.use('/appointments',appointmentsRoutes);
 app.use('/auth',authRoutes);
 app.use('/patients',patientsRoutes);
 app.use('/medicalRecords',medicalRecordRoutes);
+app.use('/notifications',notificationRoutes);
+app.use('/clinic',clinicRoutes);
 app.use((req,res,next)=>{
     const error=new Error(`Cannot find ${req.originalUrl} on this server!`);
     error.statusCode=404;

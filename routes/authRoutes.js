@@ -3,7 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const validationMiddleware = require('../middlewares/validationMiddleware');
 const { validateRegisterUser, validateLoginUser } = require('../validator/authValidator');
-
+const { authLimiter } = require('../middlewares/ratelimitMiddleware');
 /**
  * @swagger
  * tags:
@@ -49,6 +49,7 @@ const { validateRegisterUser, validateLoginUser } = require('../validator/authVa
  */
 router.post(
   '/register',
+  authLimiter,
   validateRegisterUser,
   validationMiddleware,
   authController.register
@@ -85,7 +86,7 @@ router.post(
  *       401:
  *         description: Invalid Credentials
  */
-router.post('/login', validateLoginUser, validationMiddleware, authController.login);
+router.post('/login',authLimiter, validateLoginUser, validationMiddleware, authController.login);
 
 /**
  * @swagger

@@ -146,7 +146,7 @@ router.get(
  *                 example: "2026-10-05T00:00:00.000Z"
  *               appointment_time:
  *                 type: string
- *                 example: "14:30:00"
+ *                 example: "14:30"
  *               status:
  *                 type: string
  *                 example: confirmed

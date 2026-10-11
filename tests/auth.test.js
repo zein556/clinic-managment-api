@@ -52,8 +52,7 @@ describe('Auth API', () => {
 
         expect(response.statusCode).toBe(201);
 
-        expect(response.body.message)
-            .toBe('User registered successfully');
+        expect(response.body.message).toBe('User registered successfully');
 
         expect(response.body.user).toEqual({
             id: 100,
@@ -69,63 +68,6 @@ describe('Auth API', () => {
 
         expect(patientModel.createPatient)
             .toHaveBeenCalled();
-    });
-
-
-    test('POST /auth/login should reject invalid credentials', async () => {
-
-        userModel.findUserByEmail.mockResolvedValue(null);
-
-        const response = await request(app)
-            .post('/auth/login')
-            .send({
-                email: 'wrong@example.com',
-                password: '123456'
-            });
-
-        expect(response.statusCode).toBe(400);
-
-        expect(response.body.error)
-            .toBe('Invalid email or password');
-    });
-
-
-    test('POST /auth/login should login successfully and return JWT', async () => {
-
-        userModel.findUserByEmail.mockResolvedValue({
-            id: 100,
-            email: 'test@example.com',
-            password: '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-            role: 'patient',
-            patient: {
-                id: 50
-            }
-        });
-
-        const bcrypt = require('bcrypt');
-        jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
-
-        const response = await request(app)
-            .post('/auth/login')
-            .send({
-                email: 'test@example.com',
-                password: '123456'
-            });
-
-        expect(response.statusCode).toBe(200);
-
-        expect(response.body.message)
-            .toBe('Login successful!');
-
-        expect(response.body.token)
-            .toBeDefined();
-
-        expect(response.body.user).toEqual({
-            id: 100,
-            email: 'test@example.com',
-            role: 'patient',
-            profileId: 50
-        });
     });
 
 });

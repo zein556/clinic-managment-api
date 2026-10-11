@@ -12,7 +12,7 @@ const createRecord =async(data,prescriptions=[]) => {
         create:prescriptions
        }
         },
-        include:{
+        include:{ 
             prescriptions:true,
             appointment:true
         }
