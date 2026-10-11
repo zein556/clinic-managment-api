@@ -1,202 +1,248 @@
-# 🏥 Clinic Management System API
+🏥 Clinic Management System API
 
-A RESTful API for managing a clinic's core operations, including authentication, users, doctors, patients, appointments, medical records, and prescriptions.
+A RESTful API for managing clinic operations, including authentication, doctors, patients, appointments, medical records, prescriptions, clinics, and notifications.
 
-The project is built with Node.js, Express.js, PostgreSQL, and Prisma ORM, with JWT-based authentication and Swagger API documentation.
+Built with Node.js, Express.js, PostgreSQL, and Prisma ORM 6, the API includes JWT authentication, role-based authorization, request validation, rate limiting, automated tests, and interactive Swagger documentation.
 
-## 🚀 Features
+🚀 Features
 
-### 🔐 Authentication & Authorization
-- User registration
-- User login
-- JWT authentication
+🔐 Authentication & Authorization
+
+- User registration and login
+- JWT-based authentication
 - Password hashing with bcrypt
-- Role-based authorization
-- Supported roles: admin, doctor, patient
+- Role-based access control
+- Supported roles: "admin", "doctor", and "patient"
+- Rate limiting for general API requests and authentication attempts
 
-### 👨‍⚕️ Doctors
-- Create doctors
-- Get all doctors
-- Get doctor by ID
-- Update doctor
-- Delete doctor
+👨‍⚕️ Doctors
+
+- Create, retrieve, update, and delete doctors
 - Link doctors to system users
+- Associate doctors with clinics
+- Store clinic-related location information
 
-### 🧑‍🤝‍🧑 Patients
-- Create patients
-- Get patients
-- Get patient by ID
-- Update patient
-- Delete patient
+🧑‍🤝‍🧑 Patients
+
+- Create, retrieve, update, and delete patients
 - Link patients to system users
+- Access patient resources according to authorization rules
 
-### 📅 Appointments
-- Create appointments
-- Get appointments
-- Get appointment by ID
-- Update appointments
-- Delete appointments
-- Appointment status management
-- Doctor and patient relationships
+📅 Appointments
+
+- Create, retrieve, update, and delete appointments
+- Associate appointments with doctors and patients
+- Manage appointment statuses
+- Check for conflicting doctor appointments
+- Generate notifications when appointments are booked or their status changes
 
 Supported appointment statuses:
-- pending
-- confirmed
-- cancelled
-- completed
 
-### 🩺 Medical Records
-- Create medical records
+- "pending"
+- "confirmed"
+- "cancelled"
+- "completed"
+
+🩺 Medical Records
+
+- Create medical records associated with appointments
 - Retrieve patient medical history
-- Retrieve a medical record by appointment
-- Connect medical records with appointments
+- Retrieve records by appointment
 - Associate records with doctors and patients
+- Include prescriptions when creating a medical record
 
-### 💊 Prescriptions
+Each appointment can have one medical record.
+
+💊 Prescriptions
+
 Prescriptions can be created together with a medical record.
 
 Each prescription supports:
+
 - Medication name
 - Dosage
 - Instructions
 
 Example:
+
 {
   "medication_name": "Amoxicillin",
   "dosage": "500mg",
   "instructions": "3 times daily for 7 days"
 }
 
-### 📚 API Documentation
+🏥 Clinics
+
+- Retrieve clinic information
+- Associate doctors with a clinic
+- Store clinic name, address, latitude, and longitude
+- Provide a Google Maps search URL based on clinic coordinates
+
+🔔 Notifications
+
+- Create notifications for relevant appointment events
+- Notify doctors about new appointments
+- Notify patients when appointments are booked or their status changes
+
+🛡️ API Protection
+
+- JWT authentication
+- Role-based authorization
+- Request validation
+- Rate limiting using "express-rate-limit"
+- Environment variables for sensitive configuration
+
+📚 API Documentation
+
 The API is documented using Swagger / OpenAPI.
 
-Local Swagger documentation:
+Local documentation:
+
 http://localhost:4000/api-docs
 
-## 🛠️ Tech Stack
+Deployed documentation:
+
+https://clinic-managment-api-l511.onrender.com/api-docs
+
+🛠️ Tech Stack
 
 - Node.js
 - Express.js
 - PostgreSQL
-- Prisma ORM
-- JWT
+- Prisma ORM 6
+- JSON Web Tokens (JWT)
 - bcrypt
 - Swagger / OpenAPI
 - express-validator
+- express-rate-limit
+- Jest
+- Supertest
 - dotenv
-- Nodemon
 
-## 📁 Project Structure
-```text
+📁 Project Structure
+
 clinic-managment-api/
-│
 ├── config/
 │   ├── prisma.js
 │   └── swagger.js
-│
 ├── controllers/
-│   ├── authController.js
-│   ├── appointmentController.js
-│   ├── doctorController.js
-│   ├── patientController.js
+│   ├── clinicController.js
+│   ├── notificationController.js
+│   ├── appointmentsController.js
 │   └── medicalRecordController.js
-│
 ├── middlewares/
 │   ├── authMiddleware.js
 │   ├── roleMiddleware.js
-│   └── validationMiddleware.js
-│
+│   ├── validationMiddleware.js
+│   └── ratelimitMiddleware.js
 ├── models/
-│   ├── appointmentModel.js
+│   ├── clinicModel.js
+│   ├── NotificationModel.js
 │   ├── doctorModel.js
-│   ├── patientModel.js
 │   └── medicalRecordModel.js
-│
 ├── prisma/
+│   ├── migrations/
 │   └── schema.prisma
-│
 ├── routes/
-│   ├── authRouter.js
-│   ├── appointmentRouter.js
-│   ├── doctorRouter.js
-│   ├── patientRouter.js
-│   └── medicalRecordRouter.js
-│
-├── validator/
-│   ├── appointmentValidator.js
-│   ├── medicalRecordValidator.js
+│   ├── clinicRoutes.js
+│   ├── notificationRoutes.js
+│   ├── appointmentsRoutes.js
+│   ├── authRoutes.js
 │   └── ...
-│
+├── tests/
+│   ├── appointments.test.js
+│   ├── auth.test.js
+│   ├── doctors.test.js
+│   ├── medicalRecords.test.js
+│   ├── notifications.test.js
+│   ├── patients.test.js
+│   └── rateLimit.test.js
+├── validators/
 ├── server.js
 ├── package.json
 ├── package-lock.json
 └── README.md
-```
-## 🔑 Authentication
+
+🔑 Authentication
 
 The API uses JWT Bearer Authentication.
 
-After logging in, the API returns a JWT token.
-
-Include the token in protected requests:
+After logging in, include the returned token in protected requests:
 
 Authorization: Bearer YOUR_JWT_TOKEN
-
 Swagger also supports JWT authentication through the Authorize button.
 
-## 👥 User Roles
+👥 User Roles
 
-### Admin
-Administrators have access to administrative operations and protected resources according to the API's role middleware.
+Admin
 
-### Doctor
-Doctors can access doctor-specific operations and create medical records for their appointments.
+Can access administrative operations and protected resources permitted by the role middleware.
 
-### Patient
-Patients can access patient-specific resources and their medical history according to the authorization rules.
+Doctor
 
-## 📌 Main API Endpoints
+Can access doctor-specific operations and create medical records for their appointments, subject to authorization rules.
 
-### Authentication
+Patient
 
-POST /auth/register
-POST /auth/login
+Can access patient-specific resources and medical history according to the authorization rules.
 
-### Patients
+📌 Main API Endpoints
 
-POST   /patients
-GET    /patients
-GET    /patients/:id
-PUT    /patients/:id
-DELETE /patients/:id
+The following endpoints summarize the main API routes. Check Swagger for the complete request schemas, response formats, and authorization requirements.
 
-### Doctors
+Authentication
 
-POST   /doctors
-GET    /doctors
-GET    /doctors/:id
-PUT    /doctors/:id
-DELETE /doctors/:id
+Method| Endpoint
+POST| "/auth/register"
+POST| "/auth/login"
 
-### Appointments
+Patients
 
-POST   /appointments
-GET    /appointments
-GET    /appointments/:id
-PUT    /appointments/:id
-DELETE /appointments/:id
+Method| Endpoint
+POST| "/patients"
+GET| "/patients"
+GET| "/patients/:id"
+PUT| "/patients/:id"
+DELETE| "/patients/:id"
 
-### Medical Records
+Doctors
 
-POST /medicalRecords
-GET /medicalRecords/patient/:patient_id
-GET /medicalRecords/appointment/:appointment_id
+Method| Endpoint
+POST| "/doctors"
+GET| "/doctors"
+GET| "/doctors/:id"
+PUT| "/doctors/:id"
+DELETE| "/doctors/:id"
 
-## 🩺 Medical Record Example
+Appointments
 
-A medical record can include prescriptions when it is created.
+Method| Endpoint
+POST| "/appointments"
+GET| "/appointments"
+GET| "/appointments/:id"
+PUT| "/appointments/:id"
+DELETE| "/appointments/:id"
 
-Example request:
+Medical Records
+
+Method| Endpoint
+POST| "/medicalRecords"
+GET| "/medicalRecords/patient/:patient_id"
+GET| "/medicalRecords/appointment/:appointment_id"
+
+Clinics
+
+Method| Endpoint
+GET| "/clinic"
+
+Notifications
+
+Notifications are mounted under "/notifications". Consult Swagger for the exact available operations and their required permissions.
+
+🩺 Medical Record Example
+
+Example request body:
+
 {
   "appointment_id": 5,
   "diagnosis": "Acute Pharyngitis",
@@ -217,173 +263,145 @@ Example request:
 
 A medical record is associated with one appointment.
 
-## 🗄️ Database
+🗄️ Database
 
-The project uses PostgreSQL with Prisma ORM.
+The project uses PostgreSQL with Prisma ORM 6.
 
-The main database entities are:
+Core entities include:
 
 - Users
 - Doctors
 - Patients
+- Clinics
 - Appointments
-- MedicalRecords
+- Medical records
 - Prescriptions
+- Notifications
 
-### Relationships
+Relationships
 
-User
-├── Doctor
-└── Patient
+- Users can be associated with doctor or patient profiles.
+- Clinics can be associated with multiple doctors.
+- Doctors and patients are associated with appointments.
+- An appointment can have one medical record.
+- A medical record can include prescriptions.
+- Notifications are associated with users.
 
-Doctor
-└── Appointments
+⚙️ Installation
 
-Patient
-└── Appointments
-
-Appointment
-└── MedicalRecord
-    └── Prescriptions
-
-Each appointment can have one medical record.
-
-## ⚙️ Installation
-
-### 1. Clone the repository
+1. Clone the repository
 
 git clone https://github.com/zein556/clinic-managment-api.git
 
-### 2. Enter the project directory
+2. Enter the project directory
 
 cd clinic-managment-api
 
-### 3. Install dependencies
+3. Install dependencies
 
 npm install
 
-## 🔐 Environment Variables
+🔐 Environment Variables
 
-Create a .env file in the root directory:
+Create a ".env" file in the project root:
 
 DATABASE_URL="your_postgresql_connection_string"
 JWT_SECRET="your_secret_key"
 PORT=4000
 
-Do not commit your .env file to GitHub.
+Use the actual PostgreSQL connection string and a strong, private JWT secret.
 
-Make sure .env is included in .gitignore.
+Never commit ".env" or other files containing credentials to GitHub.
 
-## 🗃️ Prisma Setup
+🗃️ Prisma Setup
 
 Generate the Prisma Client:
 
 npx prisma generate
 
-If you are using Prisma migrations:
+For a local development database, apply migrations with:
 
 npx prisma migrate dev
 
-## ▶️ Run the Project
+For an existing production database, use the project's committed migrations and follow the production migration procedure. Do not use "migrate dev" against the production database.
 
-### Development
+▶️ Run the Project
+
+Start the development server using the script configured in "package.json":
 
 npm run dev
 
-Or:
+Alternatively, if the project does not define a development script:
 
-nodemon server.js
+node server.js
 
-### Production
-
-npm start
-
-The server runs on:
+The local server runs on:
 
 http://localhost:4000
 
-## 📖 Swagger API Documentation
+📖 Swagger API Documentation
 
 Once the server is running, open:
 
 http://localhost:4000/api-docs
 
-Swagger provides an interactive interface for testing the API.
+Swagger provides an interactive interface for exploring and testing documented API endpoints. It supports JWT authorization and includes documentation for the project's API routes.
 
-You can:
-- Authenticate with JWT
-- Register users
-- Login
-- Manage doctors
-- Manage patients
-- Manage appointments
-- Create medical records
-- Add prescriptions
-- Retrieve patient history
+🧪 Automated Tests
 
-## 🌐 Deployment
+The project uses Jest and Supertest for automated API testing.
 
-The API can be deployed to a cloud platform such as Render with a PostgreSQL database.
+Run the test suite:
 
-Before deployment, configure the required environment variables:
+npm test -- --runInBand
 
-DATABASE_URL
-JWT_SECRET
-PORT
+Tests cover authentication, appointments, doctors, patients, medical records, notifications, and rate limiting.
 
-The production API URL can be added here after deployment.
+🌐 Deployment
 
-## 🔒 Security
+The API is deployed on Render.
 
-The project includes several security mechanisms:
+Swagger documentation:https://clinic-managment-api-l511.onrender.com/api-docs
+
+Configure the required environment variables in the deployment environment:
+
+- "DATABASE_URL"
+- "JWT_SECRET"
+- "PORT", if required by the hosting configuration
+
+Ensure the production PostgreSQL database has all required Prisma migrations applied before relying on the updated API.
+
+🔒 Security
+
+Security measures include:
 
 - JWT authentication
-- Password hashing using bcrypt
+- Password hashing with bcrypt
 - Role-based authorization
-- Protected routes
 - Request validation
-- Environment variables for sensitive configuration
+- Rate limiting
+- Environment variables for secrets and database credentials
 
-Sensitive information such as database credentials and JWT secrets should never be committed to the repository.
+Never expose database credentials, JWT secrets, or other sensitive configuration in the repository.
 
-## 🧪 API Testing
+🔮 Future Improvements
 
-The API can be tested using:
+Potential future enhancements include:
 
-- Swagger UI
-- Postman
-- Insomnia
-- Any HTTP client
-
-Swagger is available at:
-
-http://localhost:4000/api-docs
-
-## 🔮 Future Improvements
-
-The project is still under development.
-
-Possible future improvements include:
-
-- More advanced appointment scheduling
-- Improved authorization rules
 - Pagination and filtering
-- Better error handling
-- Automated tests
-- API rate limiting
-- Email notifications
+- More advanced appointment scheduling
+- Email or push notifications
 - Docker support
-- Production deployment improvements
-- Enhanced medical record management
-- Prescription management improvements
+- Expanded authorization and validation tests
+- Additional clinic management features
+- Improved production monitoring and deployment automation
 
-## 👨‍💻 Author
+👨‍💻 Author
 
 Zein Dwai
 
-GitHub:
-https://github.com/zein556
+GitHub: https://github.com/zein556
 
-## 📄 License
+📄 License
 
-This project is currently developed for educational and portfolio purposes.
+This project is developed for educational and portfolio purposes. No specific open-source license has been declared.
