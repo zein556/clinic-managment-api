@@ -7,7 +7,6 @@ generated/
 skills-lock.json
 
 # Local database helper scripts
-seedClinic.js
 migrateClinicData.js
 checkClinic.js
 
