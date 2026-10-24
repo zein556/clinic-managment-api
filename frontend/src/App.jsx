@@ -88,20 +88,20 @@ function App() {
         <Route path="/" element={currentUser ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLoginSuccess={saveSession} />} />
         <Route path="/register" element={<RegisterPage lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLoginSuccess={saveSession} />} />
-        <Route path="/dashboard" element={<ProtectedRoute user={currentUser}><DashboardPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
-        <Route path="/doctors" element={<ProtectedRoute user={currentUser}><DoctorsPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
-        <Route path="/patients" element={<ProtectedRoute user={currentUser}><PatientsPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
-        <Route path="/appointments" element={<ProtectedRoute user={currentUser}><AppointmentsPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
-        <Route path="/medical-records" element={<ProtectedRoute user={currentUser}><MedicalRecordsPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute user={currentUser}><NotificationsPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
-        <Route path="/clinic" element={<ProtectedRoute user={currentUser}><ClinicPage currentUser={currentUser} lang={lang} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute user={currentUser}><DashboardPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/doctors" element={<ProtectedRoute user={currentUser}><DoctorsPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/patients" element={<ProtectedRoute user={currentUser}><PatientsPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/appointments" element={<ProtectedRoute user={currentUser}><AppointmentsPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/medical-records" element={<ProtectedRoute user={currentUser}><MedicalRecordsPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute user={currentUser}><NotificationsPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
+        <Route path="/clinic" element={<ProtectedRoute user={currentUser}><ClinicPage currentUser={currentUser} lang={lang} onToggleLang={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} onLogout={clearSession} /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to={currentUser ? '/dashboard' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
-function DashboardShell({ currentUser, lang, onLogout, children }) {
+function DashboardShell({ currentUser, lang, onToggleLang, onLogout, children }) {
   const role = normalizeRole(currentUser?.role);
   const navItems = [
     { to: '/dashboard', label: lang === 'ar' ? 'لوحة التحكم' : 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'patient'] },
@@ -128,7 +128,7 @@ function DashboardShell({ currentUser, lang, onLogout, children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-white/10">
+            <button type="button" onClick={onToggleLang} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-white/10">
               {lang === 'ar' ? 'English' : 'العربية'}
             </button>
             <button type="button" onClick={onLogout} className="inline-flex items-center gap-2 rounded-xl bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/25">
@@ -352,7 +352,7 @@ function RegisterPage({ lang, onToggleLang, onLoginSuccess }) {
   );
 }
 
-function DashboardPage({ currentUser, lang, onLogout }) {
+function DashboardPage({ currentUser, lang, onToggleLang, onLogout }) {
   const role = normalizeRole(currentUser?.role);
   const [stats, setStats] = useState({ appointments: 0, doctors: 0, patients: 0, notifications: 0 });
   const [loading, setLoading] = useState(true);
@@ -403,7 +403,7 @@ function DashboardPage({ currentUser, lang, onLogout }) {
   ];
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -468,7 +468,7 @@ function DashboardPage({ currentUser, lang, onLogout }) {
   );
 }
 
-function DoctorsPage({ currentUser, lang, onLogout }) {
+function DoctorsPage({ currentUser, lang, onToggleLang, onLogout }) {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ username: '', specialty: '', phone: '' });
@@ -507,7 +507,7 @@ function DoctorsPage({ currentUser, lang, onLogout }) {
   };
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-3">
@@ -563,7 +563,7 @@ function DoctorsPage({ currentUser, lang, onLogout }) {
   );
 }
 
-function PatientsPage({ currentUser, lang, onLogout }) {
+function PatientsPage({ currentUser, lang, onToggleLang, onLogout }) {
   const role = normalizeRole(currentUser?.role);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -607,7 +607,7 @@ function PatientsPage({ currentUser, lang, onLogout }) {
   };
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-wide text-cyan-600">{lang === 'ar' ? 'المرضى' : 'Patients'}</p>
@@ -662,7 +662,7 @@ function PatientsPage({ currentUser, lang, onLogout }) {
   );
 }
 
-function AppointmentsPage({ currentUser, lang, onLogout }) {
+function AppointmentsPage({ currentUser, lang, onToggleLang, onLogout }) {
   const role = normalizeRole(currentUser?.role);
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -728,7 +728,7 @@ function AppointmentsPage({ currentUser, lang, onLogout }) {
   };
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-wide text-cyan-600">{lang === 'ar' ? 'المواعيد' : 'Appointments'}</p>
@@ -788,7 +788,7 @@ function AppointmentsPage({ currentUser, lang, onLogout }) {
   );
 }
 
-function MedicalRecordsPage({ currentUser, lang, onLogout }) {
+function MedicalRecordsPage({ currentUser, lang, onToggleLang, onLogout }) {
   const role = normalizeRole(currentUser?.role);
   const [patients, setPatients] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState(currentUser?.profileId || '');
@@ -859,7 +859,7 @@ function MedicalRecordsPage({ currentUser, lang, onLogout }) {
   };
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-wide text-cyan-600">{lang === 'ar' ? 'السجلات الطبية' : 'Medical records'}</p>
@@ -921,7 +921,7 @@ function MedicalRecordsPage({ currentUser, lang, onLogout }) {
   );
 }
 
-function NotificationsPage({ currentUser, lang, onLogout }) {
+function NotificationsPage({ currentUser, lang, onToggleLang, onLogout }) {
   const [notifications, setNotifications] = useState([]);
 
   const loadNotifications = async () => {
@@ -956,7 +956,7 @@ function NotificationsPage({ currentUser, lang, onLogout }) {
   };
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-4">
@@ -992,7 +992,7 @@ function NotificationsPage({ currentUser, lang, onLogout }) {
   );
 }
 
-function ClinicPage({ currentUser, lang, onLogout }) {
+function ClinicPage({ currentUser, lang, onToggleLang, onLogout }) {
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -1012,7 +1012,7 @@ function ClinicPage({ currentUser, lang, onLogout }) {
   }, []);
 
   return (
-    <DashboardShell currentUser={currentUser} lang={lang} onLogout={onLogout}>
+    <DashboardShell currentUser={currentUser} lang={lang} onToggleLang={onToggleLang} onLogout={onLogout}>
       <div className="space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-wide text-cyan-600">{lang === 'ar' ? 'العيادة' : 'Clinic'}</p>
