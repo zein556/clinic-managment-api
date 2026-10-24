@@ -363,6 +363,18 @@ The API is deployed on Render.
 
 Swagger documentation:https://clinic-managment-api-l511.onrender.com/api-docs
 
+The React frontend can be deployed as a separate Render Static Site from this repository using the root `render.yaml` Blueprint. It builds from `frontend` and sets `VITE_API_URL` to the deployed API.
+
+After the Static Site is created, copy its `https://...onrender.com` URL and set `FRONTEND_URL` on the API Web Service to that exact origin (without a trailing slash). The API allows that origin plus the local Vite development origins for CORS. Redeploy the API after changing the environment variable.
+
+For a manual Static Site setup, use:
+
+- Root Directory: `frontend`
+- Build Command: `npm ci && npm run build`
+- Publish Directory: `dist`
+- Environment Variable: `VITE_API_URL=https://clinic-managment-api-l511.onrender.com`
+- Rewrite Rule: `/*` to `/index.html`
+
 Configure the required environment variables in the deployment environment:
 
 - "DATABASE_URL"

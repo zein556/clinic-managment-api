@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: clinic-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://clinic-managment-api-l511.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

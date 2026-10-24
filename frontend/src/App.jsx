@@ -26,6 +26,9 @@ const normalizeRole = (role) => String(role || '').toLowerCase();
 const wrapList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
+  for (const key of ['doctors', 'patients', 'appointments', 'notifications', 'medicalRecords']) {
+    if (Array.isArray(payload?.[key])) return payload[key];
+  }
   return [];
 };
 
@@ -664,23 +667,34 @@ function AppointmentsPage({ currentUser, lang, onLogout }) {
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [form, setForm] = useState({ doctor_id: '', appointment_date: '', appointment_time: '' });
 
   const loadData = async () => {
-    try {
-      const [appointmentsResponse, doctorsResponse] = await Promise.all([
+    const [appointmentsResult, doctorsResult] = await Promise.allSettled([
         API.get('/appointments'),
         API.get('/doctors'),
-      ]);
+    ]);
 
-      setAppointments(wrapList(appointmentsResponse.data));
-      setDoctors(wrapList(doctorsResponse.data));
-    } catch {
+    const errors = [];
+    if (appointmentsResult.status === 'fulfilled') {
+      setAppointments(wrapList(appointmentsResult.value.data));
+    } else if (appointmentsResult.reason?.response?.status === 404) {
       setAppointments([]);
-      setDoctors([]);
-    } finally {
-      setLoading(false);
+    } else {
+      setAppointments([]);
+      errors.push(lang === 'ar' ? 'تعذر تحميل المواعيد.' : 'Unable to load appointments.');
     }
+
+    if (doctorsResult.status === 'fulfilled') {
+      setDoctors(wrapList(doctorsResult.value.data));
+    } else {
+      setDoctors([]);
+      errors.push(lang === 'ar' ? 'تعذر تحميل قائمة الأطباء.' : 'Unable to load doctors.');
+    }
+
+    setLoadError(errors.join(' '));
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -724,9 +738,10 @@ function AppointmentsPage({ currentUser, lang, onLogout }) {
         {role === 'patient' && (
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-xl font-bold text-slate-900">{lang === 'ar' ? 'حجز موعد جديد' : 'Book appointment'}</h2>
+            {loadError && <p role="alert" className="mb-4 text-sm font-medium text-red-600">{loadError}</p>}
             <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-3">
               <select value={form.doctor_id} onChange={(event) => setForm((prev) => ({ ...prev, doctor_id: event.target.value }))} className="rounded-xl border border-slate-200 px-3 py-3 outline-none focus:border-cyan-500">
-                <option value="">{lang === 'ar' ? 'اختر الطبيب' : 'Choose doctor'}</option>
+                <option value="">{doctors.length ? (lang === 'ar' ? 'اختر الطبيب' : 'Choose doctor') : (lang === 'ar' ? 'لا يوجد أطباء متاحون' : 'No doctors available')}</option>
                 {doctors.map((doctor) => (
                   <option key={doctor.id} value={doctor.id}>{doctor.username || doctor.name}</option>
                 ))}
