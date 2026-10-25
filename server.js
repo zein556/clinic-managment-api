@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 4000;
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://clinic-frontend.onrender.com',
   ...(process.env.FRONTEND_URL || '')
     .split(',')
     .map((origin) => origin.trim())

@@ -12,6 +12,17 @@ const app = require('../server');
 
 describe('Auth API', () => {
 
+    test('allows the deployed frontend to submit registration requests', async () => {
+        const response = await request(app)
+            .options('/auth/register')
+            .set('Origin', 'https://clinic-frontend.onrender.com')
+            .set('Access-Control-Request-Method', 'POST')
+            .set('Access-Control-Request-Headers', 'content-type');
+
+        expect(response.headers['access-control-allow-origin'])
+            .toBe('https://clinic-frontend.onrender.com');
+    });
+
     test('POST /auth/register should reject invalid email', async () => {
 
         const response = await request(app)

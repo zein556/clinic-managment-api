@@ -284,7 +284,22 @@ function RegisterPage({ lang, onToggleLang, onLoginSuccess }) {
       onLoginSuccess(loginResponse.data.user, loginResponse.data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.message || 'Registration failed');
+      const validationErrors = err.response?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+        setError(validationErrors.map(({ field, message }) => {
+          if (lang !== 'ar') return message;
+          if (field === 'username') return 'يرجى إدخال الاسم الكامل.';
+          if (field === 'email') return 'يرجى إدخال بريد إلكتروني صالح.';
+          if (field === 'password') return 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.';
+          if (field === 'phone') return 'يرجى إدخال رقم هاتف صالح.';
+          return message;
+        }).join('، '));
+      } else if (err.response?.data?.error === 'Email already exists') {
+        setError(lang === 'ar' ? 'هذا البريد الإلكتروني مستخدم بالفعل.' : err.response.data.error);
+      } else {
+        setError(err.response?.data?.error || err.response?.data?.message
+          || (lang === 'ar' ? 'تعذر الاتصال بالخادم. يرجى المحاولة مرة أخرى.' : 'Registration failed'));
+      }
     } finally {
       setLoading(false);
     }
@@ -325,17 +340,17 @@ function RegisterPage({ lang, onToggleLang, onLoginSuccess }) {
 
             <div>
               <label className="mb-1 block text-xs font-bold text-slate-700">{lang === 'ar' ? 'الاسم الكامل' : 'Full name'}</label>
-              <input type="text" value={form.username} onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-cyan-500 focus:bg-white" />
+              <input type="text" name="username" autoComplete="name" value={form.username} onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-cyan-500 focus:bg-white" />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-bold text-slate-700">{lang === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
-              <input type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-cyan-500 focus:bg-white" />
+              <input type="email" name="email" autoComplete="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-cyan-500 focus:bg-white" />
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-bold text-slate-700">{lang === 'ar' ? 'كلمة المرور' : 'Password'}</label>
-              <input type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-cyan-500 focus:bg-white" />
+              <input type="password" name="password" autoComplete="new-password" minLength={6} value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} required className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-cyan-500 focus:bg-white" />
             </div>
 
             <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60">
