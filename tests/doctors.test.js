@@ -1,3 +1,4 @@
+
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 
@@ -21,6 +22,15 @@ const createToken = (role) => {
     );
 };
 
+const createActiveUser = (role) => {
+    userModel.findUserById.mockResolvedValue({
+        id: 1,
+        email: `${role}@test.com`,
+        role,
+        isActive: true
+    });
+};
+
 describe('Doctors API', () => {
 
     beforeEach(() => {
@@ -28,6 +38,8 @@ describe('Doctors API', () => {
     });
 
     test('GET /doctors - get all doctors', async () => {
+        createActiveUser('admin');
+
         doctorModel.findAllDoctors.mockResolvedValue([
             {
                 id: 1,
@@ -46,18 +58,19 @@ describe('Doctors API', () => {
         ]);
 
         const response = await request(app)
-            .get('/doctors');
+            .get('/doctors')
+            .set('Authorization', `Bearer ${createToken('admin')}`);
 
         expect(response.statusCode).toBe(200);
         expect(response.body.doctors).toHaveLength(2);
         expect(response.body.doctors[0].name).toBe('Dr. Zein');
 
-        expect(doctorModel.findAllDoctors)
-            .toHaveBeenCalled();
+        expect(doctorModel.findAllDoctors).toHaveBeenCalled();
     });
 
-
     test('GET /doctors/:id - get doctor by ID', async () => {
+        createActiveUser('admin');
+
         doctorModel.findDoctorById.mockResolvedValue({
             id: 1,
             name: 'Dr. Zein',
@@ -67,32 +80,34 @@ describe('Doctors API', () => {
         });
 
         const response = await request(app)
-            .get('/doctors/1');
+            .get('/doctors/1')
+            .set('Authorization', `Bearer ${createToken('admin')}`);
 
         expect(response.statusCode).toBe(200);
         expect(response.body.doctor.id).toBe(1);
         expect(response.body.doctor.name).toBe('Dr. Zein');
 
-        expect(doctorModel.findDoctorById)
-            .toHaveBeenCalledWith(1);
+        expect(doctorModel.findDoctorById).toHaveBeenCalledWith(1);
     });
 
-
     test('GET /doctors/:id - doctor not found', async () => {
+        createActiveUser('admin');
+
         doctorModel.findDoctorById.mockResolvedValue(null);
 
         const response = await request(app)
-            .get('/doctors/999');
+            .get('/doctors/999')
+            .set('Authorization', `Bearer ${createToken('admin')}`);
 
         expect(response.statusCode).toBe(404);
         expect(response.body.error).toBe('Doctor not found');
 
-        expect(doctorModel.findDoctorById)
-            .toHaveBeenCalledWith(999);
+        expect(doctorModel.findDoctorById).toHaveBeenCalledWith(999);
     });
 
-
     test('POST /doctors - create doctor', async () => {
+        createActiveUser('admin');
+
         userModel.findUserByEmail.mockResolvedValue(null);
 
         userModel.createUser.mockResolvedValue({
@@ -121,8 +136,7 @@ describe('Doctors API', () => {
             });
 
         expect(response.statusCode).toBe(201);
-        expect(response.body.message)
-            .toBe('Doctor created successfully');
+        expect(response.body.message).toBe('Doctor created successfully');
 
         expect(response.body.doctor.id).toBe(5);
         expect(response.body.doctor.name).toBe('Dr. Zein');
@@ -130,20 +144,19 @@ describe('Doctors API', () => {
         expect(userModel.findUserByEmail)
             .toHaveBeenCalledWith('doctor@example.com');
 
-        expect(userModel.createUser)
-            .toHaveBeenCalled();
-
-        expect(doctorModel.createDoctor)
-            .toHaveBeenCalled();
+        expect(userModel.createUser).toHaveBeenCalled();
+        expect(doctorModel.createDoctor).toHaveBeenCalled();
     });
 
-
     test('POST /doctors - email already exists', async () => {
+        createActiveUser('admin');
+
         userModel.findUserByEmail.mockResolvedValue({
             id: 20,
             email: 'doctor@example.com',
             role: 'doctor'
         });
+
         const response = await request(app)
             .post('/doctors')
             .set('Authorization', `Bearer ${createToken('admin')}`)
@@ -156,18 +169,15 @@ describe('Doctors API', () => {
             });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.error)
-            .toBe('Email already exists');
+        expect(response.body.error).toBe('Email already exists');
 
-        expect(userModel.createUser)
-            .not.toHaveBeenCalled();
-
-        expect(doctorModel.createDoctor)
-            .not.toHaveBeenCalled();
+        expect(userModel.createUser).not.toHaveBeenCalled();
+        expect(doctorModel.createDoctor).not.toHaveBeenCalled();
     });
 
-
     test('PUT /doctors/:id - update doctor', async () => {
+        createActiveUser('admin');
+
         doctorModel.updateDoctor.mockResolvedValue({
             id: 1,
             name: 'Dr. Updated',
@@ -186,24 +196,23 @@ describe('Doctors API', () => {
             });
 
         expect(response.statusCode).toBe(200);
-        expect(response.body.message)
-            .toBe('Doctor profile updated');
+        expect(response.body.message).toBe('Doctor profile updated');
 
         expect(response.body.doctor.id).toBe(1);
 
-        expect(doctorModel.updateDoctor)
-            .toHaveBeenCalledWith(
-                '1',
-                expect.objectContaining({
-                    username: 'Dr. Updated',
-                    specialty: 'Neurology',
-                    phone: '555555555'
-                })
-            );
+        expect(doctorModel.updateDoctor).toHaveBeenCalledWith(
+            '1',
+            expect.objectContaining({
+                username: 'Dr. Updated',
+                specialty: 'Neurology',
+                phone: '555555555'
+            })
+        );
     });
 
-
     test('DELETE /doctors/:id - delete doctor', async () => {
+        createActiveUser('admin');
+
         doctorModel.findDoctorById.mockResolvedValue({
             id: 1,
             name: 'Dr. Zein',
@@ -221,18 +230,15 @@ describe('Doctors API', () => {
             .set('Authorization', `Bearer ${createToken('admin')}`);
 
         expect(response.statusCode).toBe(200);
-        expect(response.body.message)
-            .toBe('Doctor deleted successfully');
+        expect(response.body.message).toBe('Doctor deleted successfully');
 
-        expect(doctorModel.findDoctorById)
-            .toHaveBeenCalledWith('1');
-
-        expect(doctorModel.deleteDoctor)
-            .toHaveBeenCalledWith('1');
+        expect(doctorModel.findDoctorById).toHaveBeenCalledWith('1');
+        expect(doctorModel.deleteDoctor).toHaveBeenCalledWith('1');
     });
 
-
     test('DELETE /doctors/:id - doctor not found', async () => {
+        createActiveUser('admin');
+
         doctorModel.findDoctorById.mockResolvedValue(null);
 
         const response = await request(app)
@@ -240,15 +246,14 @@ describe('Doctors API', () => {
             .set('Authorization', `Bearer ${createToken('admin')}`);
 
         expect(response.statusCode).toBe(404);
-        expect(response.body.error)
-            .toBe('Doctor not found');
+        expect(response.body.error).toBe('Doctor not found');
 
-        expect(doctorModel.deleteDoctor)
-            .not.toHaveBeenCalled();
+        expect(doctorModel.deleteDoctor).not.toHaveBeenCalled();
     });
 
-
     test('POST /doctors - doctor role is forbidden', async () => {
+        createActiveUser('doctor');
+
         const response = await request(app)
             .post('/doctors')
             .set('Authorization', `Bearer ${createToken('doctor')}`)
@@ -262,15 +267,13 @@ describe('Doctors API', () => {
 
         expect(response.statusCode).toBe(403);
 
-        expect(userModel.createUser)
-            .not.toHaveBeenCalled();
-
-        expect(doctorModel.createDoctor)
-            .not.toHaveBeenCalled();
+        expect(userModel.createUser).not.toHaveBeenCalled();
+        expect(doctorModel.createDoctor).not.toHaveBeenCalled();
     });
 
-
     test('PUT /doctors/:id - doctor role is forbidden', async () => {
+        createActiveUser('doctor');
+
         const response = await request(app)
             .put('/doctors/1')
             .set('Authorization', `Bearer ${createToken('doctor')}`)
@@ -280,22 +283,19 @@ describe('Doctors API', () => {
             });
 
         expect(response.statusCode).toBe(403);
-        expect(doctorModel.updateDoctor)
-            .not.toHaveBeenCalled();
+        expect(doctorModel.updateDoctor).not.toHaveBeenCalled();
     });
 
-
     test('DELETE /doctors/:id - doctor role is forbidden', async () => {
+        createActiveUser('doctor');
+
         const response = await request(app)
             .delete('/doctors/1')
             .set('Authorization', `Bearer ${createToken('doctor')}`);
 
         expect(response.statusCode).toBe(403);
-
-        expect(doctorModel.deleteDoctor)
-            .not.toHaveBeenCalled();
+        expect(doctorModel.deleteDoctor).not.toHaveBeenCalled();
     });
-
 
     test('POST /doctors - no token', async () => {
         const response = await request(app)
@@ -309,9 +309,7 @@ describe('Doctors API', () => {
             });
 
         expect(response.statusCode).toBe(401);
-
-        expect(userModel.createUser)
-            .not.toHaveBeenCalled();
+        expect(userModel.createUser).not.toHaveBeenCalled();
     });
 
 });

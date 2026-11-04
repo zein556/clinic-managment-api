@@ -1,22 +1,36 @@
-const prisma=require('../config/prisma');
-const findUserByEmail=async(email)=>{
+
+const prisma = require('../config/prisma');
+
+// Find a user by email, including doctor and patient profiles
+const findUserByEmail = async (email) => {
     return await prisma.users.findUnique({
-        where:{email},
-        include:{doctor:true,patient:true}
+        where: { email },
+        include: {
+            doctor: true,
+            patient: true
+        }
     });
-}
-const findUserById=async(id)=>{
+};
+
+// Find a user by ID, including doctor and patient profiles
+const findUserById = async (id) => {
     return await prisma.users.findUnique({
-        where:{id:parseInt(id,10)},
-        include:{doctor:true,patient:true}
+        where: { id: parseInt(id, 10) },
+        include: {
+            doctor: true,
+            patient: true
+        }
     });
-}   
-const createUser=async(userData)=>{
+};
+
+// Create a new user
+const createUser = async (userData) => {
     return await prisma.users.create({
-        data:userData
+        data: userData
     });
-}
-module.exports={
+};
+
+module.exports = {
     findUserByEmail,
     findUserById,
     createUser

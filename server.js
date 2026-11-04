@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const cors = require('cors');
 const express = require('express');
 const app = express();
@@ -16,19 +18,23 @@ const PORT = process.env.PORT || 4000;
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'https://clinic-frontend.onrender.com',
-  ...(process.env.FRONTEND_URL || '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean)
+  'http://localhost:4000'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    callback(null, !origin || allowedOrigins.includes(origin));
-  }
+    // السماح بالطلبات التي لا تحتوي على Origin، مثل بعض طلبات الاختبار
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(generalLimiter);

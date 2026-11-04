@@ -182,3 +182,297 @@
     border-right-color: var(--border);
   }
 }
+
+.form-message {
+  padding: 12px 14px;
+  margin: 16px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-message.success {
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+
+.form-message.error {
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.submit-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.user-info {
+  margin: 25px 0;
+  padding: 20px;
+  border-radius: 10px;
+  background: #f4f8fa;
+  line-height: 2;
+  overflow-wrap: anywhere;
+}
+
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 30px;
+  background: #f4f8fa;
+  color: #183247;
+  text-align: center;
+}
+
+.dashboard h1 {
+  color: #087f8c;
+  font-size: 32px;
+}
+
+.dashboard p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.appointments-section {
+  width: 100%;
+  max-width: 850px;
+  margin-top: 25px;
+}
+
+.appointments-section h2 {
+  margin-bottom: 20px;
+  color: #087f8c;
+}
+
+.appointments-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.appointment-card {
+  padding: 22px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.appointment-card h3 {
+  margin: 0 0 15px;
+  color: #087f8c;
+}
+
+.appointment-card p {
+  margin: 9px 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.booking-section {
+  width: 100%;
+  max-width: 550px;
+  margin: 25px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.booking-section h2 {
+  color: #087f8c;
+  margin-bottom: 20px;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.booking-form label {
+  font-weight: 600;
+  color: #183247;
+}
+
+.booking-form input,
+.booking-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d5e0e5;
+  border-radius: 8px;
+  font-size: 15px;
+  background: white;
+}
+
+.booking-form button {
+  margin-top: 10px;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #087f8c;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.booking-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.appointment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.appointment-actions button,
+.edit-form button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 7px;
+  background: #087f8c;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.appointment-actions .danger-button {
+  background: #dc2626;
+}
+
+.edit-form {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.edit-form .secondary-button {
+  background: #64748b;
+}
+
+.status-pending {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.status-confirmed {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.status-cancelled {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.status-completed {
+  color: #0369a1;
+  font-weight: 700;
+}
+
+/* Medical Records */
+
+.medical-records-section,
+.notifications-section {
+  margin-top: 35px;
+}
+
+.medical-records-list,
+.notifications-list,
+.prescriptions-list {
+  display: grid;
+  gap: 18px;
+}
+
+.medical-record-card,
+.prescription-card,
+.notification-card {
+  padding: 20px;
+  border: 1px solid #e0e5ec;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-bottom: 12px;
+}
+
+.medical-record-card h3,
+.notification-card h3 {
+  margin-top: 0;
+}
+
+.prescriptions-section {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e5ec;
+}
+
+.prescription-card {
+  background: #f7f9fc;
+}
+
+/* Notifications */
+
+.notifications-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.notification-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 7px;
+  margin-left: 10px;
+  border-radius: 50px;
+  background: #dc3545;
+  color: white;
+  font-size: 13px;
+}
+
+.notification-card.unread {
+  border-left: 5px solid #2563eb;
+  background: #f0f6ff;
+}
+
+.notification-card.read {
+  border-left: 5px solid #cbd5e1;
+  background: #ffffff;
+}
+
+.notification-card button {
+  margin-top: 10px;
+}
+
+.notification-content p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .notifications-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .medical-record-card,
+  .notification-card {
+    padding: 15px;
+  }
+}

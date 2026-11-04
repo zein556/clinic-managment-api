@@ -1,0 +1,1359 @@
+
+/* ========================================
+   1. CSS VARIABLES
+======================================== */
+
+:root {
+  --admin-ink: #172b4d;
+  --admin-muted: #718096;
+  --admin-line: #e7edf4;
+
+  --admin-primary: #2878c7;
+  --admin-primary-dark: #1d5f9f;
+
+  --admin-surface: #ffffff;
+  --admin-bg: #f4f7fb;
+}
+
+
+/* ========================================
+   2. GENERAL LAYOUT
+======================================== */
+
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* ========================================
+   3. SIDEBAR
+======================================== */
+
+.admin-sidebar {
+  width: 258px;
+  flex: 0 0 258px;
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 26px 18px 18px;
+
+  background: #102b49;
+  color: #ffffff;
+
+  position: relative;
+  z-index: 20;
+}
+
+/* Brand */
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 10px 30px;
+}
+
+.admin-brand-mark {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 13px;
+
+  background: #2d8bd8;
+  color: #ffffff;
+
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.admin-brand strong,
+.admin-brand small {
+  display: block;
+}
+
+.admin-brand strong {
+  font-size: 19px;
+  letter-spacing: 0.2px;
+}
+
+.admin-brand small {
+  margin-top: 3px;
+  color: #a9c0d8;
+  font-size: 11px;
+}
+
+/* Sidebar user */
+
+.admin-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 17px 10px;
+  margin-bottom: 28px;
+
+  border: 1px solid #31506d;
+  border-radius: 13px;
+}
+
+.admin-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #d9ecff;
+  color: #1d5f9f;
+
+  font-weight: 800;
+}
+
+.admin-sidebar-user strong,
+.admin-sidebar-user small {
+  display: block;
+}
+
+.admin-sidebar-user strong {
+  font-size: 13px;
+}
+
+.admin-sidebar-user small {
+  margin-top: 3px;
+  color: #a9c0d8;
+  font-size: 11px;
+}
+
+/* Navigation */
+
+.admin-menu-caption {
+  padding: 0 10px 10px;
+
+  color: #91abc5;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.admin-navigation {
+  display: grid;
+  gap: 7px;
+}
+
+.admin-navigation button,
+.admin-logout {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  padding: 12px 13px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #c4d4e4;
+
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+
+.admin-navigation button:hover,
+.admin-navigation button.active {
+  background: #21496d;
+  color: #ffffff;
+}
+
+.admin-navigation button.active {
+  box-shadow: inset 3px 0 #5bb4f4;
+}
+
+.admin-nav-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 17px;
+}
+
+/* Logout */
+
+.admin-logout {
+  margin-top: auto;
+  color: #e2edf8;
+}
+
+.admin-logout:hover {
+  background: #21496d;
+}
+
+.admin-sidebar-footer {
+  padding: 18px 10px 0;
+
+  color: #89a4bf;
+  font-size: 10px;
+}
+
+
+/* ========================================
+   4. MAIN CONTENT AND HEADER
+======================================== */
+
+.admin-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-header {
+  height: 88px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 38px;
+
+  background: #ffffff;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-header-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-header-title small {
+  color: #8b9bad;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.admin-header-title h1 {
+  margin: 4px 0 0;
+  font-size: 21px;
+}
+
+.admin-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-header-user strong {
+  font-size: 13px;
+}
+
+.admin-header-user small {
+  margin-top: 3px;
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+.admin-menu-toggle {
+  display: none;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--admin-ink);
+  font-size: 23px;
+
+  cursor: pointer;
+}
+
+.admin-content {
+  max-width: 1500px;
+
+  margin: 0 auto;
+  padding: 32px 38px 48px;
+}
+
+
+/* ========================================
+   5. WELCOME SECTION
+======================================== */
+
+.admin-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 28px 32px;
+
+  border-radius: 17px;
+
+  background: linear-gradient(115deg, #173b60, #286f9f);
+  color: #ffffff;
+
+  box-shadow: 0 10px 24px #163c601a;
+}
+
+.admin-welcome span:first-child {
+  color: #b6d9f4;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.admin-welcome h2 {
+  margin: 9px 0 7px;
+  font-size: 25px;
+}
+
+.admin-welcome p {
+  margin: 0;
+  color: #d2e4f4;
+  font-size: 13px;
+}
+
+.admin-welcome-mark {
+  font-size: 58px;
+  opacity: 0.28;
+}
+
+
+/* ========================================
+   6. STATISTICS CARDS
+======================================== */
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+
+  margin: 22px 0 34px;
+}
+
+.admin-stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+
+  padding: 20px;
+
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow: 0 4px 14px #20354d08;
+}
+
+.admin-stat-card > span {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  background: #eaf4fd;
+  color: var(--admin-primary);
+
+  font-size: 20px;
+}
+
+.admin-stat-card small,
+.admin-stat-card strong,
+.admin-stat-card em {
+  display: block;
+}
+
+.admin-stat-card small {
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+.admin-stat-card strong {
+  margin: 5px 0;
+  font-size: 27px;
+}
+
+.admin-stat-card em {
+  color: #94a1af;
+  font-size: 10px;
+  font-style: normal;
+}
+
+
+/* ========================================
+   7. SECTION HEADINGS
+======================================== */
+
+.admin-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  margin: 0 0 17px;
+}
+
+.admin-section-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.admin-section-heading p {
+  margin: 5px 0 0;
+
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-doctors-heading {
+  gap: 15px;
+}
+
+
+/* ========================================
+   8. QUICK ACTIONS
+======================================== */
+
+.admin-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-quick-actions button {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  column-gap: 13px;
+  align-items: center;
+
+  padding: 19px;
+
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+
+  background: #ffffff;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.admin-quick-actions button > span {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  grid-row: span 2;
+
+  border-radius: 12px;
+
+  background: #eaf4fd;
+  color: var(--admin-primary);
+
+  font-size: 21px;
+}
+
+.admin-quick-actions strong {
+  font-size: 13px;
+}
+
+.admin-quick-actions small {
+  margin-top: 4px;
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+
+/* ========================================
+   9. BUTTONS
+======================================== */
+
+.admin-button {
+  padding: 10px 15px;
+
+  border: 0;
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s,
+    transform 0.18s;
+}
+
+.admin-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-button.primary {
+  background: var(--admin-primary);
+  color: #ffffff;
+}
+
+.admin-button.primary:hover {
+  background: var(--admin-primary-dark);
+}
+
+.admin-button.secondary {
+  background: #edf3f8;
+  color: #40566d;
+}
+
+.admin-button.danger {
+  background: #fff0f0;
+  color: #c44747;
+}
+
+.admin-button.small {
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+
+/* ========================================
+   10. SEARCH TOOLBAR
+======================================== */
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  margin: 18px 0 14px;
+}
+
+.admin-toolbar input {
+  width: min(420px, 100%);
+
+  padding: 11px 13px;
+
+  border: 1px solid #dce5ee;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  font: inherit;
+  font-size: 12px;
+
+  outline: none;
+}
+
+.admin-toolbar input:focus,
+.admin-form-grid input:focus {
+  border-color: #75b6e8;
+  box-shadow: 0 0 0 3px #2878c71a;
+}
+
+.admin-toolbar span,
+.admin-count {
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+
+/* ========================================
+   11. TABLES
+======================================== */
+
+.admin-table-wrap {
+  overflow-x: auto;
+
+  border: 1px solid var(--admin-line);
+  border-radius: 13px;
+
+  background: #ffffff;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #edf1f5;
+
+  text-align: left;
+  font-size: 12px;
+}
+
+.admin-table th {
+  background: #f8fafc;
+  color: #77879a;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+
+/* ========================================
+   12. PERSON INFORMATION IN TABLES
+======================================== */
+
+.admin-person-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-person-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: #eaf4fd;
+  color: #276da9;
+
+  font-weight: 800;
+}
+
+.admin-person-cell strong,
+.admin-person-cell small {
+  display: block;
+}
+
+.admin-person-cell strong {
+  font-size: 12px;
+}
+
+.admin-person-cell small {
+  margin-top: 3px;
+  color: #93a0ad;
+  font-size: 10px;
+}
+
+.admin-row-actions {
+  display: flex;
+  gap: 7px;
+}
+
+
+/* ========================================
+   13. APPOINTMENT STATUS
+======================================== */
+
+.admin-status {
+  display: inline-flex;
+
+  padding: 5px 8px;
+
+  border-radius: 20px;
+
+  background: #f1f4f7;
+  color: #607080;
+
+  font-size: 10px;
+  text-transform: capitalize;
+}
+
+.admin-status.pending {
+  background: #fff6e5;
+  color: #a56b0c;
+}
+
+.admin-status.confirmed {
+  background: #e9f3ff;
+  color: #276da9;
+}
+
+.admin-status.completed {
+  background: #e8f7ef;
+  color: #248251;
+}
+
+.admin-status.cancelled {
+  background: #fff0f0;
+  color: #bf4848;
+}
+
+.admin-table select {
+  padding: 7px 9px;
+
+  border: 1px solid #dfe7ee;
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #43566b;
+
+  font: inherit;
+  font-size: 11px;
+}
+
+
+/* ========================================
+   14. EMPTY AND LOADING STATES
+======================================== */
+
+.admin-empty,
+.admin-loading {
+  padding: 42px 20px;
+
+  border: 1px dashed #d5e0e9;
+  border-radius: 12px;
+
+  background: #ffffff;
+  color: var(--admin-muted);
+
+  text-align: center;
+  font-size: 13px;
+}
+
+.admin-loading {
+  border: 0;
+  background: transparent;
+}
+
+
+/* ========================================
+   15. ALERT MESSAGES
+======================================== */
+
+.admin-alert {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+
+  margin-bottom: 15px;
+  padding: 12px 15px;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+}
+
+.admin-alert button {
+  border: 0;
+  background: transparent;
+
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.admin-alert.error {
+  background: #fff0f0;
+  color: #a83b3b;
+}
+
+.admin-alert.success {
+  background: #eaf8f0;
+  color: #24784a;
+}
+
+
+/* ========================================
+   16. ADMIN PROFILE
+======================================== */
+
+.admin-profile-card {
+  max-width: 560px;
+
+  padding: 28px;
+
+  border: 1px solid var(--admin-line);
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.admin-profile-avatar {
+  width: 66px;
+  height: 66px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0 auto 12px;
+
+  border-radius: 50%;
+
+  background: #e4f1fc;
+  color: #246da8;
+
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.admin-profile-card h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.admin-profile-card > p {
+  margin: 5px 0 22px;
+
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-profile-card > div {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 13px 4px;
+
+  border-top: 1px solid var(--admin-line);
+
+  text-align: left;
+}
+
+.admin-profile-card small {
+  color: var(--admin-muted);
+}
+
+.admin-profile-card strong {
+  font-size: 12px;
+}
+
+
+/* ========================================
+   17. MODAL
+======================================== */
+
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+
+  display: grid;
+  place-items: center;
+
+  padding: 20px;
+
+  background: #0b1d30a6;
+
+  overflow-y: auto;
+}
+
+.admin-modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  padding: 25px;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow: 0 24px 70px #071a2d40;
+}
+
+.admin-modal-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+
+  margin-bottom: 22px;
+}
+
+.admin-modal-heading small {
+  color: var(--admin-primary);
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.admin-modal-heading h2 {
+  margin: 6px 0;
+  font-size: 21px;
+}
+
+.admin-modal-heading p {
+  margin: 0;
+
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-modal-close {
+  width: 32px;
+  height: 32px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #f0f4f7;
+  color: #526477;
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+
+/* ========================================
+   18. FORM FIELDS
+======================================== */
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.admin-form-grid label {
+  display: grid;
+  gap: 7px;
+
+  color: #53677b;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-form-grid input {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  border: 1px solid #dce5ee;
+  border-radius: 8px;
+
+  font: inherit;
+  font-size: 12px;
+
+  outline: none;
+}
+
+.admin-full-field {
+  grid-column: 1 / -1;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+
+  margin-top: 24px;
+}
+
+
+/* ========================================
+   19. CLINIC INFORMATION
+======================================== */
+
+.admin-clinic-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+
+  margin-bottom: 28px;
+  padding: 25px;
+
+  border: 1px solid var(--admin-line);
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  box-shadow: 0 4px 14px #20354d08;
+}
+
+.admin-clinic-card.compact {
+  margin-bottom: 30px;
+}
+
+/* Clinic icon */
+
+.admin-clinic-icon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 14px;
+
+  background: #eaf4fd;
+  color: var(--admin-primary);
+
+  font-size: 25px;
+}
+
+/* Clinic details */
+
+.admin-clinic-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-clinic-label {
+  color: var(--admin-primary);
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.admin-clinic-main h2 {
+  margin: 7px 0;
+  font-size: 20px;
+}
+
+.admin-clinic-main > p {
+  margin: 0;
+
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+/* Clinic coordinates */
+
+.admin-clinic-coordinates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px;
+
+  margin-top: 22px;
+  padding-top: 17px;
+
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-clinic-coordinates span,
+.admin-clinic-coordinates small,
+.admin-clinic-coordinates strong {
+  display: block;
+}
+
+.admin-clinic-coordinates small {
+  margin-bottom: 5px;
+
+  color: var(--admin-muted);
+  font-size: 10px;
+}
+
+.admin-clinic-coordinates strong {
+  font-size: 12px;
+}
+
+/* Clinic buttons */
+
+.admin-clinic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+
+  margin-top: 20px;
+}
+
+.admin-clinic-actions a {
+  display: inline-flex;
+  align-items: center;
+
+  text-decoration: none;
+}
+
+/* Clinic doctors heading */
+
+.admin-clinic-doctors-heading {
+  margin-top: 30px;
+}
+
+/* Clinic doctors list */
+
+.admin-clinic-doctors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.admin-clinic-doctor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 16px;
+
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.admin-clinic-doctor strong,
+.admin-clinic-doctor small {
+  display: block;
+}
+
+.admin-clinic-doctor strong {
+  font-size: 12px;
+}
+
+.admin-clinic-doctor small {
+  margin-top: 4px;
+
+  color: var(--admin-muted);
+  font-size: 11px;
+}
+
+
+/* ========================================
+   20. MOBILE OVERLAY
+======================================== */
+
+.admin-overlay {
+  display: none;
+}
+
+
+/* ========================================
+   21. TABLET RESPONSIVE DESIGN
+======================================== */
+
+@media (max-width: 1050px) {
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-content {
+    padding: 26px 24px 40px;
+  }
+
+  .admin-header {
+    padding: 0 24px;
+  }
+}
+
+
+/* ========================================
+   22. MOBILE RESPONSIVE DESIGN
+======================================== */
+
+@media (max-width: 760px) {
+
+  /* Sidebar */
+
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    transform: translateX(-105%);
+
+    transition: transform 0.22s;
+
+    box-shadow: 12px 0 35px #0a203040;
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-overlay {
+    display: block;
+
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+
+    border: 0;
+
+    background: #0a203080;
+  }
+
+  /* Header */
+
+  .admin-menu-toggle {
+    display: block;
+  }
+
+  .admin-header {
+    height: 76px;
+    padding: 0 17px;
+  }
+
+  .admin-header-user > span:last-child {
+    display: none;
+  }
+
+  /* Main content */
+
+  .admin-content {
+    padding: 20px 16px 32px;
+  }
+
+  /* Welcome */
+
+  .admin-welcome {
+    padding: 22px;
+  }
+
+  .admin-welcome h2 {
+    font-size: 20px;
+  }
+
+  /* Statistics */
+
+  .admin-stat-grid {
+    gap: 10px;
+  }
+
+  .admin-stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .admin-stat-card > span {
+    width: 34px;
+    height: 34px;
+  }
+
+  .admin-stat-card strong {
+    font-size: 23px;
+  }
+
+  /* Quick actions */
+
+  .admin-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  /* Doctors */
+
+  .admin-doctors-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  /* Toolbar */
+
+  .admin-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-toolbar input {
+    width: auto;
+  }
+
+  /* Forms */
+
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-full-field {
+    grid-column: auto;
+  }
+
+  /* Clinic information */
+
+  .admin-clinic-card {
+    gap: 13px;
+    padding: 17px;
+  }
+
+  .admin-clinic-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+
+    font-size: 20px;
+  }
+
+  .admin-clinic-main h2 {
+    font-size: 17px;
+  }
+
+  .admin-clinic-doctors {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-clinic-coordinates {
+    gap: 20px;
+  }
+
+  .admin-clinic-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-clinic-actions > * {
+    justify-content: center;
+  }
+}
+
+/* ========================================
+   23. PATIENT MANAGEMENT
+======================================== */
+
+/* Active patient account */
+.admin-status.active {
+  background: #e8f7ef;
+  color: #248251;
+}
+
+/* Deactivated patient account */
+.admin-status.deactivated {
+  background: #fff0f0;
+  color: #bf4848;
+}
+
+/* Patient action buttons */
+.admin-row-actions .admin-button {
+  white-space: nowrap;
+}
+
+/* Disabled patient action */
+.admin-row-actions .admin-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

@@ -1,110 +1,136 @@
+
 generator client {
-  provider = "prisma-client-js"  
- }
- datasource db {
-  provider = "postgresql"
- url       =  env("DATABASE_URL")
- }
-enum Role{
-admin
-doctor
-patient
+  provider = "prisma-client-js"
+}
 
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
-enum AppointmentStatus{
-pending
-confirmed
-cancelled
-completed
+
+model appointments {
+  id               Int               @id @default(autoincrement())
+  appointment_date DateTime
+  appointment_time String
+  status           AppointmentStatus @default(pending)
+  doctor_id        Int
+  patient_id       Int
+  createdAt        DateTime          @default(now())
+
+  doctor        doctors       @relation(fields: [doctor_id], references: [id], onDelete: Cascade)
+  patient       patients      @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  medicalRecord MedicalRecord?
+
+  @@index([doctor_id], map: "appointments_doctor_id_fkey")
+  @@index([patient_id], map: "appointments_patient_id_fkey")
 }
- model appointments {
-  id               Int       @id @default(autoincrement())
- appointment_date  DateTime
- appointment_time  String
- status            AppointmentStatus     @default(pending)
- doctor_id         Int
- doctor            doctors     @relation(fields:[doctor_id],references:[id],onDelete:Cascade)
- patient_id         Int
- patient           patients   @relation(fields:[patient_id],references:[id],onDelete:Cascade)
- createdAt         DateTime   @default(now())
- medicalRecord     MedicalRecord?
- 
- }
- model doctors {
-  id           Int            @id @default(autoincrement())
-  name         String         @db.VarChar(100)
-  specialty    String         @db.VarChar(100)
-  phone        String?
-  clinic_id    Int?
- clinic_address  String?
- latitude      Float?
- longitude     Float?
-  user_id      Int            @unique
-  user         users          @relation(fields:[user_id],references:[id],onDelete:Cascade)
-  clinic       clinics?       @relation(fields:[clinic_id],references:[id],onDelete:SetNull)
+
+model doctors {
+  id             Int            @id @default(autoincrement())
+  name           String         @db.VarChar(100)
+  specialty      String         @db.VarChar(100)
+  phone          String?
+  clinic_id      Int?
+  clinic_address String?
+  latitude       Float?
+  longitude      Float?
+  user_id        Int            @unique
+
   appointments appointments[]
- }
+  clinic       clinics?       @relation(fields: [clinic_id], references: [id])
+  user         users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
- model users {
-  id           Int            @id @default(autoincrement())
-  email        String?        @unique
-  password     String
-  role         Role           @default(patient)
-  createdAt   DateTime        @default(now())
- doctor         doctors?
- patient        patients?
- notifications  Notification[]
- }
- model patients{
- id           Int              @id @default(autoincrement())
- name         String
- phone        String?
- age          Int?
- medical_history String?
- gender       String?
- user_id      Int              @unique
- user         users            @relation(fields:[user_id],references:[id],onDelete:Cascade)  
- appointments    appointments[]
- }
- model MedicalRecord{
-id            Int              @id @default(autoincrement())
-appointment_id   Int           @unique
-patient_id      Int            
-doctor_id       Int
-diagnosis        String
-notes            String?
-createdAt        DateTime       @default(now())
+  @@index([clinic_id], map: "doctors_clinic_id_fkey")
+}
 
-appointment      appointments  @relation(fields:[appointment_id],references:[id],onDelete:Cascade)
-prescriptions    Prescription[]
- }
+model users {
+  id            Int            @id @default(autoincrement())
+  email         String?        @unique(map: "email")
+  password      String
+  role          Role           @default(patient)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
 
- model Prescription{
-id         Int      @id @default(autoincrement())
-medical_record_id    Int
-medication_name     String
-dosage              String
-instructions        String?
+  doctor        doctors?
+  notifications Notification[]
+  patient       patients?
+}
 
-medicalRecord   MedicalRecord   @relation(fields:[medical_record_id],references:[id],onDelete:Cascade)
+model patients {
+  id              Int            @id @default(autoincrement())
+  name            String
+  phone           String?
+  age             Int?
+  medical_history String?
+  gender          String?
+  user_id         Int            @unique
 
- }
- model Notification{
-id         Int    @id @default(autoincrement())
-user_id    Int    
-title      String
-message    String
-type       String
-is_read    Boolean   @default(false)
-createdAt  DateTime   @default (now())
-user       users      @relation(fields:[user_id],references:[id],onDelete:Cascade)
+  appointments appointments[]
+  user         users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
 
- }
 model clinics {
   id        Int       @id @default(autoincrement())
   name      String
   address   String
   latitude  Float
   longitude Float
-  doctors   doctors[]
+
+  doctors doctors[]
+}
+
+model MedicalRecord {
+  id             Int      @id @default(autoincrement())
+  appointment_id Int      @unique(map: "MedicalRecord_appointment_id_key")
+  patient_id     Int
+  doctor_id      Int
+  diagnosis      String
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  appointment   appointments  @relation(fields: [appointment_id], references: [id], onDelete: Cascade, map: "MedicalRecord_appointment_id_fkey")
+  prescriptions Prescription[]
+
+  @@map("medicalrecord")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  user_id   Int
+  title     String
+  message   String
+  type      String
+  is_read   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "Notification_user_id_fkey")
+
+  @@index([user_id], map: "Notification_user_id_fkey")
+  @@map("notification")
+}
+
+model Prescription {
+  id                Int      @id @default(autoincrement())
+  medical_record_id Int
+  medication_name   String
+  dosage            String
+  instructions      String?
+
+  medicalRecord MedicalRecord @relation(fields: [medical_record_id], references: [id], onDelete: Cascade, map: "Prescription_medical_record_id_fkey")
+
+  @@index([medical_record_id], map: "Prescription_medical_record_id_fkey")
+  @@map("prescription")
+}
+
+enum Role {
+  admin
+  doctor
+  patient
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  cancelled
+  completed
 }

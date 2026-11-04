@@ -135,10 +135,12 @@ router.post('/', authenticateToken, checkrole(['admin']), createPatientValidator
  *         description: Patient not found
  */
 router.put('/:id', authenticateToken, checkrole(['admin']), updatePatientValidator, validationMiddleware, patientsController.updatePatient);/**
+/**
  * @swagger
  * /patients/{id}:
  *   delete:
- *     summary: Delete a patient (Admin only)
+ *     summary: Deactivate a patient account (Admin only)
+ *     description: Deactivates the patient account without deleting patient data, appointments, or medical records.
  *     tags: [Patients]
  *     security:
  *       - bearerAuth: []
@@ -151,10 +153,49 @@ router.put('/:id', authenticateToken, checkrole(['admin']), updatePatientValidat
  *         description: Patient ID
  *     responses:
  *       200:
- *         description: Patient deleted successfully
+ *         description: Patient account deactivated successfully
+ *       400:
+ *         description: Patient account is already deactivated
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Access restricted to Admin
  *       404:
  *         description: Patient not found
  */
-router.delete('/:id', authenticateToken, checkrole(['admin']), patientsController.deletePatient);
+router.delete(
+    '/:id',
+    authenticateToken,
+    checkrole(['admin']),
+    patientsController.deactivatePatient
+);
 
+/**
+ * @swagger
+ * /patients/{id}/activate:
+ *   patch:
+ *     summary: Reactivate a patient account (Admin only)
+ *     tags: [Patients]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Patient account reactivated successfully
+ *       400:
+ *         description: Patient account is already active
+ *       404:
+ *         description: Patient not found
+ */
+router.patch(
+  '/:id/activate',
+  authenticateToken,
+  checkrole(['admin']),
+  patientsController.activatePatient
+);
 module.exports = router;

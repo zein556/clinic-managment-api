@@ -10,3 +10,6 @@ skills-lock.json
 migrateClinicData.js
 checkClinic.js
 
+
+# Local Prisma backup
+prisma/schema.prisma.backup

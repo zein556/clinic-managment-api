@@ -1,21 +1,29 @@
-import axios from 'axios';
 
-const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const API_URL = import.meta.env.VITE_API_URL;
 
-API.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('clinic-token') : null;
+export async function apiRequest(endpoint, options = {}) {
+  // Read the JWT token saved after login
+  const token = localStorage.getItem("token");
 
-  if (token) {
-    config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+
+      // Send the token to the backend
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+
+      ...options.headers,
+    },
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || data.message || "Something went wrong"
+    );
   }
 
-  return config;
-});
-
-export default API;
+  return data;
+}

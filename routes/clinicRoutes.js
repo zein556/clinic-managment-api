@@ -1,66 +1,82 @@
 const express = require('express');
 const router = express.Router();
 
-const { getClinic } = require('../controllers/clinicController');
+const {
+    getClinic,
+    updateClinic
+} = require('../controllers/clinicController');
+
+const { authenticateToken } = require('../middlewares/authMiddleware');
+const checkRole = require('../middlewares/roleMiddleware');
 
 /**
  * @swagger
  * tags:
  *   name: Clinic
- *   description: Clinic information and location
+ *   description: Clinic information and management
  */
 
 /**
  * @swagger
  * /clinic:
  *   get:
- *     summary: Get clinic information and location
- *     description: Returns clinic details, its doctors, and a Google Maps link to the clinic location.
+ *     summary: Get clinic information
  *     tags: [Clinic]
  *     responses:
  *       200:
  *         description: Clinic information retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 name:
- *                   type: string
- *                   example: العيادة الرئيسية
- *                 address:
- *                   type: string
- *                   example: عنوان العيادة
- *                 latitude:
- *                   type: number
- *                   example: 35.52526
- *                 longitude:
- *                   type: number
- *                   example: 35.79689
- *                 googleMapsUrl:
- *                   type: string
- *                   format: uri
- *                   description: Google Maps link for the clinic location
- *                   example: https://www.google.com/maps/search/?api=1&query=35.52526,35.79689
- *                 doctors:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       name:
- *                         type: string
- *                       specialty:
- *                         type: string
  *       404:
  *         description: Clinic not found
- *       500:
- *         description: Internal server error
+ *
+ *   put:
+ *     summary: Update clinic information (Admin only)
+ *     tags: [Clinic]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - address
+ *               - latitude
+ *               - longitude
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: عيادة دوار الزراعة
+ *               address:
+ *                 type: string
+ *                 example: دوار الزراعة، اللاذقية، سوريا
+ *               latitude:
+ *                 type: number
+ *                 example: 35.52526
+ *               longitude:
+ *                 type: number
+ *                 example: 35.79689
+ *     responses:
+ *       200:
+ *         description: Clinic updated successfully
+ *       400:
+ *         description: Invalid clinic information
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: Clinic not found
  */
+
 router.get('/', getClinic);
+
+router.put(
+    '/',
+    authenticateToken,
+    checkRole(['admin']),
+    updateClinic
+);
 
 module.exports = router;
