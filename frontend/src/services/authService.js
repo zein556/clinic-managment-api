@@ -17,13 +17,25 @@ export async function loginUser(email, password) {
   return data;
 }
 
-export async function registerUser(username, email, password) {
+export async function registerUser(
+  username,
+  email,
+  password,
+  phone,
+  age,
+  gender,
+  medical_history
+) {
   return apiRequest("/auth/register", {
     method: "POST",
     body: JSON.stringify({
       username,
       email,
       password,
+      phone,
+      age: Number(age),
+      gender,
+      medical_history: medical_history.trim() || null,
       role: "patient",
     }),
   });

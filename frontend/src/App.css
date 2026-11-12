@@ -476,3 +476,134 @@
     padding: 15px;
   }
 }
+
+/* ========================================
+   CarePoint - Improved Form Fields
+======================================== */
+
+.input-group {
+  margin-bottom: 22px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 9px;
+  color: #243b53;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dce5ed;
+  border-radius: 11px;
+  background-color: #f8fafc;
+  color: #243b53;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              background-color 0.2s ease;
+}
+
+.input-group input,
+.input-group select {
+  min-height: 49px;
+  padding: 0 15px;
+}
+
+.input-group textarea {
+  min-height: 125px;
+  padding: 14px 15px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.input-group input::placeholder,
+.input-group textarea::placeholder {
+  color: #9aa9b8;
+  opacity: 1;
+  font-size: 13px;
+}
+
+.input-group select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.input-group select:invalid {
+  color: #9aa9b8;
+}
+
+.input-group select option {
+  color: #243b53;
+  background: #ffffff;
+}
+
+.input-group input:hover,
+.input-group select:hover,
+.input-group textarea:hover {
+  border-color: #b8cbdc;
+}
+
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+}
+
+.medical-history-group label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.optional-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background-color: #eaf3fb;
+  color: #397ba8;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.medical-history-group textarea {
+  min-height: 135px;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 8px;
+  color: #8493a3;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.password-wrapper input {
+  min-height: 49px;
+}
+
+@media (max-width: 600px) {
+  .input-group {
+    margin-bottom: 18px;
+  }
+
+  .input-group input,
+  .input-group select {
+    min-height: 47px;
+  }
+
+  .medical-history-group textarea {
+    min-height: 120px;
+  }
+}

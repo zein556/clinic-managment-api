@@ -12,10 +12,16 @@ const register = async (req, res, next) => {
             username,
             phone = null,
             specialty = 'General',
-            medical_history = null,
             age = null,
             gender = null
         } = req.body;
+
+        // Convert empty medical history to null.
+        const medical_history =
+            typeof req.body.medical_history === 'string' &&
+            req.body.medical_history.trim() !== ''
+                ? req.body.medical_history.trim()
+                : null;
 
         const existingUser = await userModel.findUserByEmail(email);
 
@@ -26,15 +32,17 @@ const register = async (req, res, next) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const normalizedRole = 'patient'; // Default role is 'patient'. Change this logic if you want to allow doctors to register.
+        const normalizedRole = 'patient';
 
-        const newUser = await userModel.createUser({
-            email,
-            password: hashedPassword,
-            role: normalizedRole
-        });
+        let newUser;
 
         if (normalizedRole === 'doctor') {
+            newUser = await userModel.createUser({
+                email,
+                password: hashedPassword,
+                role: normalizedRole
+            });
+
             await doctorModel.createDoctor({
                 username,
                 phone,
@@ -42,14 +50,26 @@ const register = async (req, res, next) => {
                 user_id: newUser.id
             });
         } else {
-            await patientModel.createPatient({
-                username,
-                phone,
-                medical_history,
-                age,
-                gender,
-                user_id: newUser.id
-            });
+            const newPatient = await patientModel.createPatientWithUser(
+                {
+                    email,
+                    password: hashedPassword,
+                    role: normalizedRole
+                },
+                {
+                    username,
+                    phone,
+                    medical_history,
+                    age,
+                    gender
+                }
+            );
+
+            newUser = {
+                id: newPatient.user_id,
+                email,
+                role: normalizedRole
+            };
         }
 
         return res.status(201).json({
@@ -60,6 +80,7 @@ const register = async (req, res, next) => {
                 role: newUser.role
             }
         });
+
     } catch (err) {
         next(err);
     }
@@ -70,16 +91,19 @@ const login = async (req, res, next) => {
         const { email, password } = req.body;
 
         const user = await userModel.findUserByEmail(email);
+
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(400).json({
                 error: 'Invalid email or password'
             });
         }
-if (!user.isActive) {
-    return res.status(403).json({
-        error: 'Your account has been deactivated. Please contact the administrator.'
-    });
-}
+
+        if (!user.isActive) {
+            return res.status(403).json({
+                error: 'Your account has been deactivated. Please contact the administrator.'
+            });
+        }
+
         let profileId = null;
         let name = null;
         let specialty = null;
@@ -124,6 +148,7 @@ if (!user.isActive) {
                 specialty
             }
         });
+
     } catch (err) {
         next(err);
     }

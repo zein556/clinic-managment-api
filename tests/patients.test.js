@@ -32,24 +32,35 @@ const createActiveUser = (role) => {
     });
 };
 
+const mockPatient = () => ({
+    id: 100,
+    name: 'Test Patient',
+    phone: '123456789',
+    age: 30,
+    gender: 'male',
+    medical_history: 'None',
+    user_id: 200,
+    user: {
+        id: 200,
+        email: 'patient@example.com',
+        isActive: true
+    }
+});
+
 describe('Patients API', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
+    // Create patient
+
     test('POST /patients - create patient', async () => {
         createActiveUser('admin');
 
         userModel.findUserByEmail.mockResolvedValue(null);
 
-        userModel.createUser.mockResolvedValue({
-            id: 200,
-            email: 'patient@example.com',
-            role: 'patient'
-        });
-
-        patientModel.createPatient.mockResolvedValue({
+        patientModel.createPatientWithUser.mockResolvedValue({
             id: 100,
             name: 'Test Patient',
             phone: '123456789',
@@ -75,28 +86,19 @@ describe('Patients API', () => {
         expect(response.statusCode).toBe(201);
         expect(response.body.message).toBe('Patient created successfully');
         expect(response.body.patient.id).toBe(100);
-        expect(userModel.createUser).toHaveBeenCalled();
-        expect(patientModel.createPatient).toHaveBeenCalled();
+
+        expect(patientModel.createPatientWithUser).toHaveBeenCalled();
+        expect(userModel.createUser).not.toHaveBeenCalled();
+        expect(patientModel.createPatient).not.toHaveBeenCalled();
     });
+
+    // Get all patients
 
     test('GET /patients - get all patients', async () => {
         createActiveUser('admin');
 
         patientModel.findAllPatients.mockResolvedValue([
-            {
-                id: 100,
-                name: 'Test Patient',
-                phone: '123456789',
-                age: 30,
-                gender: 'male',
-                medical_history: 'None',
-                user_id: 200,
-                user: {
-                    id: 200,
-                    email: 'patient@example.com',
-                    isActive: true
-                }
-            }
+            mockPatient()
         ]);
 
         const response = await request(app)
@@ -109,20 +111,12 @@ describe('Patients API', () => {
         expect(patientModel.findAllPatients).toHaveBeenCalled();
     });
 
+    // Get patient by ID
+
     test('GET /patients/:id - get patient by ID', async () => {
         createActiveUser('admin');
 
-        patientModel.findPatientById.mockResolvedValue({
-            id: 100,
-            name: 'Test Patient',
-            phone: '123456789',
-            user_id: 200,
-            user: {
-                id: 200,
-                email: 'patient@example.com',
-                isActive: true
-            }
-        });
+        patientModel.findPatientById.mockResolvedValue(mockPatient());
 
         const response = await request(app)
             .get('/patients/100')
@@ -145,8 +139,54 @@ describe('Patients API', () => {
         expect(response.body.error).toBe('Patient not found');
     });
 
-    test('PUT /patients/:id - update patient', async () => {
+    // Patient's own profile
+
+    test('GET /patients/me - patient can get own profile', async () => {
+        createActiveUser('patient');
+
+        patientModel.findPatientById.mockResolvedValue(mockPatient());
+
+        const response = await request(app)
+            .get('/patients/me')
+            .set('Authorization', `Bearer ${createToken('patient')}`);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.patient.id).toBe(100);
+
+        expect(patientModel.findPatientById)
+            .toHaveBeenCalledWith(100);
+    });
+
+    test('GET /patients/me - patient profile not found', async () => {
+        createActiveUser('patient');
+
+        patientModel.findPatientById.mockResolvedValue(null);
+
+        const response = await request(app)
+            .get('/patients/me')
+            .set('Authorization', `Bearer ${createToken('patient')}`);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body.error).toBe('Patient profile not found');
+    });
+
+    test('GET /patients/me - admin cannot access patient own profile endpoint', async () => {
         createActiveUser('admin');
+
+        const response = await request(app)
+            .get('/patients/me')
+            .set('Authorization', `Bearer ${createToken('admin')}`);
+
+        expect(response.statusCode).toBe(403);
+        expect(patientModel.findPatientById).not.toHaveBeenCalled();
+    });
+
+    // Patient updates own profile
+
+    test('PUT /patients/me - patient can update own profile', async () => {
+        createActiveUser('patient');
+
+        patientModel.findPatientById.mockResolvedValue(mockPatient());
 
         patientModel.updatePatient.mockResolvedValue({
             id: 100,
@@ -154,7 +194,91 @@ describe('Patients API', () => {
             phone: '555555555',
             age: 31,
             gender: 'male',
-            medical_history: 'Updated',
+            user_id: 200
+        });
+
+        const response = await request(app)
+            .put('/patients/me')
+            .set('Authorization', `Bearer ${createToken('patient')}`)
+            .send({
+                username: 'Updated Patient',
+                phone: '555555555',
+                age: 31,
+                gender: 'male'
+            });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe('Profile updated successfully');
+        expect(response.body.patient.id).toBe(100);
+
+        expect(patientModel.updatePatient).toHaveBeenCalledWith(
+            100,
+            expect.objectContaining({
+                username: 'Updated Patient',
+                phone: '555555555',
+                age: 31,
+                gender: 'male'
+            })
+        );
+    });
+
+    test('PUT /patients/me - patient cannot update email', async () => {
+        createActiveUser('patient');
+
+        const response = await request(app)
+            .put('/patients/me')
+            .set('Authorization', `Bearer ${createToken('patient')}`)
+            .send({
+                email: 'newemail@example.com'
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toBe('Invalid fields');
+        expect(patientModel.updatePatient).not.toHaveBeenCalled();
+    });
+
+    test('PUT /patients/me - patient cannot update medical history', async () => {
+        createActiveUser('patient');
+
+        const response = await request(app)
+            .put('/patients/me')
+            .set('Authorization', `Bearer ${createToken('patient')}`)
+            .send({
+                medical_history: 'New medical history'
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toBe('Invalid fields');
+        expect(patientModel.updatePatient).not.toHaveBeenCalled();
+    });
+
+    test('PUT /patients/me - admin cannot use patient update endpoint', async () => {
+        createActiveUser('admin');
+
+        const response = await request(app)
+            .put('/patients/me')
+            .set('Authorization', `Bearer ${createToken('admin')}`)
+            .send({
+                username: 'Updated Patient'
+            });
+
+        expect(response.statusCode).toBe(403);
+        expect(patientModel.updatePatient).not.toHaveBeenCalled();
+    });
+
+    // Admin updates patient
+
+    test('PUT /patients/:id - update patient', async () => {
+        createActiveUser('admin');
+
+        patientModel.findPatientById.mockResolvedValue(mockPatient());
+
+        patientModel.updatePatient.mockResolvedValue({
+            id: 100,
+            name: 'Updated Patient',
+            phone: '555555555',
+            age: 31,
+            gender: 'male',
             user_id: 200
         });
 
@@ -162,11 +286,10 @@ describe('Patients API', () => {
             .put('/patients/100')
             .set('Authorization', `Bearer ${createToken('admin')}`)
             .send({
-                name: 'Updated Patient',
+                username: 'Updated Patient',
                 phone: '555555555',
                 age: 31,
-                gender: 'male',
-                medical_history: 'Updated'
+                gender: 'male'
             });
 
         expect(response.statusCode).toBe(200);
@@ -176,9 +299,26 @@ describe('Patients API', () => {
         expect(patientModel.updatePatient).toHaveBeenCalledWith(
             '100',
             expect.objectContaining({
-                name: 'Updated Patient'
+                username: 'Updated Patient',
+                phone: '555555555',
+                age: 31,
+                gender: 'male'
             })
         );
+    });
+
+    test('PUT /patients/:id - cannot update email', async () => {
+        createActiveUser('admin');
+
+        const response = await request(app)
+            .put('/patients/100')
+            .set('Authorization', `Bearer ${createToken('admin')}`)
+            .send({
+                email: 'newemail@example.com'
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(patientModel.updatePatient).not.toHaveBeenCalled();
     });
 
     // Soft deactivation tests
@@ -186,16 +326,7 @@ describe('Patients API', () => {
     test('DELETE /patients/:id - deactivate patient successfully', async () => {
         createActiveUser('admin');
 
-        patientModel.findPatientById.mockResolvedValue({
-            id: 100,
-            name: 'Test Patient',
-            user_id: 200,
-            user: {
-                id: 200,
-                email: 'patient@example.com',
-                isActive: true
-            }
-        });
+        patientModel.findPatientById.mockResolvedValue(mockPatient());
 
         patientModel.deactivatePatient.mockResolvedValue({
             id: 200,
@@ -239,9 +370,7 @@ describe('Patients API', () => {
         createActiveUser('admin');
 
         patientModel.findPatientById.mockResolvedValue({
-            id: 100,
-            name: 'Test Patient',
-            user_id: 200,
+            ...mockPatient(),
             user: {
                 id: 200,
                 email: 'patient@example.com',
@@ -260,6 +389,8 @@ describe('Patients API', () => {
         expect(patientModel.deactivatePatient)
             .not.toHaveBeenCalled();
     });
+
+    // Role permissions
 
     test('GET /patients - doctor can access', async () => {
         createActiveUser('doctor');

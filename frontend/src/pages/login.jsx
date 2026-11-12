@@ -18,6 +18,10 @@ function Login() {
     email: "",
     password: "",
     confirmPassword: "",
+    phone: "",
+    age: "",
+    gender: "",
+    medical_history: "",
   });
 
   const handleChange = (e) => {
@@ -37,6 +41,10 @@ function Login() {
       email: "",
       password: "",
       confirmPassword: "",
+      phone: "",
+      age: "",
+      gender: "",
+      medical_history: "",
     });
 
     setMessage("");
@@ -58,19 +66,17 @@ function Login() {
       setIsLoading(true);
 
       if (isLogin) {
-      const data = await loginUser(
-  formData.email,
-  formData.password
-);
+        const data = await loginUser(
+          formData.email,
+          formData.password
+        );
 
-// Debug: inspect the login response
-console.log("LOGIN RESPONSE:", data);
-console.log("USER OBJECT:", data.user);
-console.log("USER NAME:", data.user?.name);
+        console.log("LOGIN RESPONSE:", data);
+        console.log("USER OBJECT:", data.user);
+        console.log("USER NAME:", data.user?.name);
 
-// Save user data
-localStorage.setItem("user", JSON.stringify(data.user));
-        // Redirect according to role
+        localStorage.setItem("user", JSON.stringify(data.user));
+
         switch (data.user.role) {
           case "admin":
             navigate("/admin", { replace: true });
@@ -94,7 +100,11 @@ localStorage.setItem("user", JSON.stringify(data.user));
         const data = await registerUser(
           formData.username,
           formData.email,
-          formData.password
+          formData.password,
+          formData.phone,
+          formData.age,
+          formData.gender,
+          formData.medical_history
         );
 
         setMessage(data.message || "Registration successful!");
@@ -107,6 +117,10 @@ localStorage.setItem("user", JSON.stringify(data.user));
           email: formData.email,
           password: "",
           confirmPassword: "",
+          phone: "",
+          age: "",
+          gender: "",
+          medical_history: "",
         });
       }
     } catch (error) {
@@ -198,17 +212,84 @@ localStorage.setItem("user", JSON.stringify(data.user));
 
             <form onSubmit={handleSubmit}>
               {!isLogin && (
-                <div className="input-group">
-                  <label>Username</label>
-                  <input
-                    type="text"
-                    name="username"
-                    placeholder="Enter your username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                <>
+                  <div className="input-group">
+                    <label>Username</label>
+                    <input
+                      type="text"
+                      name="username"
+                      placeholder="Enter your username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      autoComplete="username"
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Phone Number</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      autoComplete="tel"
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Age</label>
+                    <input
+                      type="number"
+                      name="age"
+                      placeholder="Enter your age"
+                      value={formData.age}
+                      onChange={handleChange}
+                      min="0"
+                      step="1"
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Gender</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="" disabled>
+                        Select your gender
+                      </option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="input-group medical-history-group">
+                    <label>
+                      Medical History
+                      <span className="optional-label">Optional</span>
+                    </label>
+
+                    <textarea
+                      name="medical_history"
+                      placeholder="Describe any previous or current medical conditions, allergies, or surgeries (if any)"
+                      value={formData.medical_history}
+                      onChange={handleChange}
+                      rows="4"
+                    />
+
+                    <span className="field-hint">
+                      You can leave this field empty if you prefer to provide
+                      your medical information later.
+                    </span>
+                  </div>
+                </>
               )}
 
               <div className="input-group">
@@ -219,6 +300,7 @@ localStorage.setItem("user", JSON.stringify(data.user));
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleChange}
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -233,6 +315,7 @@ localStorage.setItem("user", JSON.stringify(data.user));
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleChange}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
                     required
                   />
 
@@ -255,6 +338,7 @@ localStorage.setItem("user", JSON.stringify(data.user));
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    autoComplete="new-password"
                     required
                   />
                 </div>

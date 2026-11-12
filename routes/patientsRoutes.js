@@ -4,7 +4,12 @@ const { authenticateToken } = require('../middlewares/authMiddleware');
 const checkrole = require('../middlewares/roleMiddleware');
 const validationMiddleware = require('../middlewares/validationMiddleware');
 const patientsController = require('../controllers/patientsController');
-const { updatePatientValidator, createPatientValidator } = require('../validator/patientValidator');
+
+const {
+    updatePatientValidator,
+    updateMyProfileValidator,
+    createPatientValidator
+} = require('../validator/patientValidator');
 
 /**
  * @swagger
@@ -13,6 +18,60 @@ const { updatePatientValidator, createPatientValidator } = require('../validator
  *   description: Patient management endpoints
  */
 
+// Patient's own profile - must be before /:id
+/**
+ * @swagger
+ * /patients/me:
+ *   get:
+ *     summary: Get the logged-in patient's own profile
+ *     tags: [Patients]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Patient profile retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Patient access only
+ *       404:
+ *         description: Patient profile not found
+ */
+router.get(
+    '/me',
+    authenticateToken,
+    checkrole(['patient']),
+    patientsController.getMyProfile
+);
+
+/**
+ * @swagger
+ * /patients/me:
+ *   put:
+ *     summary: Update the logged-in patient's own profile
+ *     tags: [Patients]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Patient profile updated successfully
+ *       400:
+ *         description: Invalid data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Patient access only
+ */
+router.put(
+    '/me',
+    authenticateToken,
+    checkrole(['patient']),
+    updateMyProfileValidator,
+    validationMiddleware,
+    patientsController.updateMyProfile
+);
+
+// Admin and Doctor: Get all patients
 /**
  * @swagger
  * /patients:
@@ -24,13 +83,15 @@ const { updatePatientValidator, createPatientValidator } = require('../validator
  *     responses:
  *       200:
  *         description: List of patients retrieved successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Access restricted to Admin and Doctors
  */
-router.get('/', authenticateToken, checkrole(['admin', 'doctor']), patientsController.getPatients);
+router.get(
+    '/',
+    authenticateToken,
+    checkrole(['admin', 'doctor']),
+    patientsController.getPatients
+);
 
+// Admin and Doctor: Get patient by ID
 /**
  * @swagger
  * /patients/{id}:
@@ -45,17 +106,20 @@ router.get('/', authenticateToken, checkrole(['admin', 'doctor']), patientsContr
  *         required: true
  *         schema:
  *           type: integer
- *         description: Patient ID
  *     responses:
  *       200:
  *         description: Patient details retrieved successfully
- *       401:
- *         description: Unauthorized
  *       404:
  *         description: Patient not found
  */
-router.get('/:id', authenticateToken, checkrole(['admin', 'doctor']), patientsController.getPatientById);
+router.get(
+    '/:id',
+    authenticateToken,
+    checkrole(['admin', 'doctor']),
+    patientsController.getPatientById
+);
 
+// Admin: Create patient
 /**
  * @swagger
  * /patients:
@@ -64,39 +128,17 @@ router.get('/:id', authenticateToken, checkrole(['admin', 'doctor']), patientsCo
  *     tags: [Patients]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - phone
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Jane Doe"
- *               phone:
- *                 type: string
- *                 example: "+1234567890"
- *               gender:
- *                 type: string
- *                 example: "female"
- *               birth_date:
- *                 type: string
- *                 format: date
- *                 example: "1998-04-12"
- *     responses:
- *       201:
- *         description: Patient created successfully
- *       400:
- *         description: Invalid payload
- *       401:
- *         description: Unauthorized
  */
-router.post('/', authenticateToken, checkrole(['admin']), createPatientValidator, validationMiddleware, patientsController.createPatient);
+router.post(
+    '/',
+    authenticateToken,
+    checkrole(['admin']),
+    createPatientValidator,
+    validationMiddleware,
+    patientsController.createPatient
+);
 
+// Admin: Update patient by ID
 /**
  * @swagger
  * /patients/{id}:
@@ -111,57 +153,31 @@ router.post('/', authenticateToken, checkrole(['admin']), createPatientValidator
  *         required: true
  *         schema:
  *           type: integer
- *         description: Patient ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               phone:
- *                 type: string
- *               gender:
- *                 type: string
- *               birth_date:
- *                 type: string
- *                 format: date
  *     responses:
  *       200:
  *         description: Patient updated successfully
  *       404:
  *         description: Patient not found
  */
-router.put('/:id', authenticateToken, checkrole(['admin']), updatePatientValidator, validationMiddleware, patientsController.updatePatient);/**
+router.put(
+    '/:id',
+    authenticateToken,
+    checkrole(['admin']),
+    updatePatientValidator,
+    validationMiddleware,
+    patientsController.updatePatient
+);
+
+// Admin: Deactivate patient account
 /**
  * @swagger
  * /patients/{id}:
  *   delete:
  *     summary: Deactivate a patient account (Admin only)
- *     description: Deactivates the patient account without deleting patient data, appointments, or medical records.
+ *     description: Deactivates the account without deleting patient data.
  *     tags: [Patients]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Patient ID
- *     responses:
- *       200:
- *         description: Patient account deactivated successfully
- *       400:
- *         description: Patient account is already deactivated
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Access restricted to Admin
- *       404:
- *         description: Patient not found
  */
 router.delete(
     '/:id',
@@ -170,6 +186,7 @@ router.delete(
     patientsController.deactivatePatient
 );
 
+// Admin: Reactivate patient account
 /**
  * @swagger
  * /patients/{id}/activate:
@@ -178,24 +195,12 @@ router.delete(
  *     tags: [Patients]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Patient account reactivated successfully
- *       400:
- *         description: Patient account is already active
- *       404:
- *         description: Patient not found
  */
 router.patch(
-  '/:id/activate',
-  authenticateToken,
-  checkrole(['admin']),
-  patientsController.activatePatient
+    '/:id/activate',
+    authenticateToken,
+    checkrole(['admin']),
+    patientsController.activatePatient
 );
+
 module.exports = router;

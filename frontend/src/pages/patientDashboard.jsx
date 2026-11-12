@@ -19,6 +19,11 @@ import {
   markAllNotificationsAsRead,
 } from "../services/notificationService";
 
+import {
+  getMyProfile,
+  updateMyProfile,
+} from "../services/patientService";
+
 import PatientSidebar from "../components/patient/PatientSidebar";
 import PatientTopbar from "../components/patient/PatientTopbar";
 import "./patientDashboard.css";
@@ -46,6 +51,18 @@ function PatientDashboard() {
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
+  // Patient profile state
+  const [patientProfile, setPatientProfile] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const [profileDraft, setProfileDraft] = useState({
+    username: "",
+    phone: "",
+    age: "",
+    gender: "",
+  });
+
   const [doctorId, setDoctorId] = useState("");
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
@@ -67,7 +84,13 @@ function PatientDashboard() {
     (notification) => !notification.is_read
   ).length;
 
-  const patientName = user.name || user.username || "Patient";
+  const patientName =
+    patientProfile?.name ||
+    patientProfile?.username ||
+    user.name ||
+    user.username ||
+    "Patient";
+
   const menuItems = [
     { id: "dashboard", icon: "⌂", label: "Dashboard" },
     { id: "appointments", icon: "▦", label: "My Appointments" },
@@ -101,6 +124,7 @@ function PatientDashboard() {
           : Promise.resolve([]),
         getMyNotifications(),
         getClinic(),
+        getMyProfile(),
       ]);
 
       const errors = [];
@@ -133,6 +157,12 @@ function PatientDashboard() {
         setClinic(results[4].value);
       } else {
         errors.push("Could not load clinic information.");
+      }
+
+      if (results[5].status === "fulfilled") {
+        setPatientProfile(results[5].value);
+      } else {
+        errors.push("Could not load your profile.");
       }
 
       if (errors.length > 0) {
@@ -199,6 +229,96 @@ function PatientDashboard() {
   async function refreshNotifications() {
     const data = await getMyNotifications();
     setNotifications(data);
+  }
+
+  // Prepare the profile data for editing.
+  function startEditingProfile() {
+    setProfileDraft({
+      username:
+        patientProfile?.name ||
+        patientProfile?.username ||
+        "",
+      phone: patientProfile?.phone || "",
+      age:
+        patientProfile?.age === null ||
+        patientProfile?.age === undefined
+          ? ""
+          : String(patientProfile.age),
+      gender: patientProfile?.gender || "",
+    });
+
+    setEditingProfile(true);
+    setError("");
+    setSuccess("");
+  }
+
+  function cancelProfileEditing() {
+    setEditingProfile(false);
+    setProfileDraft({
+      username: "",
+      phone: "",
+      age: "",
+      gender: "",
+    });
+  }
+
+  // Save the patient's personal profile.
+  async function handleProfileUpdate(event) {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!profileDraft.username.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+
+    if (!profileDraft.phone.trim()) {
+      setError("Please enter your phone number.");
+      return;
+    }
+
+    if (
+      profileDraft.age !== "" &&
+      (!Number.isInteger(Number(profileDraft.age)) ||
+        Number(profileDraft.age) < 0)
+    ) {
+      setError("Please enter a valid age.");
+      return;
+    }
+
+    const profileData = {
+      username: profileDraft.username.trim(),
+      phone: profileDraft.phone.trim(),
+    };
+
+    if (profileDraft.age !== "") {
+      profileData.age = Number(profileDraft.age);
+    }
+
+    if (profileDraft.gender) {
+      profileData.gender = profileDraft.gender;
+    }
+
+    try {
+      setSavingProfile(true);
+
+      const result = await updateMyProfile(profileData);
+
+      // Fetch the latest profile from the database.
+      const updatedProfile = await getMyProfile();
+
+      setPatientProfile(updatedProfile);
+      setEditingProfile(false);
+
+      setSuccess(
+        result.message || "Profile updated successfully."
+      );
+    } catch (err) {
+      setError(err.message || "Could not update your profile.");
+    } finally {
+      setSavingProfile(false);
+    }
   }
 
   async function handleBooking(event) {
@@ -1067,8 +1187,29 @@ function PatientDashboard() {
   }
 
   function renderProfile() {
+    const email = patientProfile?.user?.email || user.email || "Not available";
+    const isActive = patientProfile?.user?.isActive;
+
     return (
       <div className="content-card profile-card">
+        <div className="section-heading">
+          <div>
+            <h3>My Personal Information</h3>
+            <p>View and update your personal profile information.</p>
+          </div>
+
+          {!editingProfile && (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={startEditingProfile}
+              disabled={!patientProfile}
+            >
+              Edit Profile
+            </button>
+          )}
+        </div>
+
         <div className="profile-banner">
           <div className="profile-avatar">
             {patientName.charAt(0).toUpperCase()}
@@ -1080,31 +1221,183 @@ function PatientDashboard() {
           </div>
         </div>
 
-        <div className="profile-information">
-          <div>
-            <span>Full Name</span>
-            <strong>{patientName}</strong>
+        {editingProfile ? (
+          <form
+            className="patient-form profile-edit-form"
+            onSubmit={handleProfileUpdate}
+          >
+            <div className="form-field">
+              <label htmlFor="profile-username">Full Name</label>
+              <input
+                id="profile-username"
+                type="text"
+                value={profileDraft.username}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    username: event.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="profile-phone">Phone Number</label>
+              <input
+                id="profile-phone"
+                type="tel"
+                value={profileDraft.phone}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    phone: event.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="profile-age">Age</label>
+              <input
+                id="profile-age"
+                type="number"
+                min="0"
+                value={profileDraft.age}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    age: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="profile-gender">Gender</label>
+              <select
+                id="profile-gender"
+                value={profileDraft.gender}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    gender: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Not specified</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="profile-email">Email Address</label>
+              <input
+                id="profile-email"
+                type="email"
+                value={email}
+                readOnly
+                disabled
+              />
+              <small>Email address cannot be changed here.</small>
+            </div>
+
+            <div className="appointment-actions">
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={savingProfile}
+              >
+                {savingProfile ? "Saving..." : "Save Changes"}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={cancelProfileEditing}
+                disabled={savingProfile}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="profile-information">
+            <div>
+              <span>Full Name</span>
+              <strong>{patientName}</strong>
+            </div>
+
+            <div>
+              <span>Email Address</span>
+              <strong>{email}</strong>
+            </div>
+
+            <div>
+              <span>Phone Number</span>
+              <strong>{patientProfile?.phone || "Not specified"}</strong>
+            </div>
+
+            <div>
+              <span>Age</span>
+              <strong>
+                {patientProfile?.age ?? "Not specified"}
+              </strong>
+            </div>
+
+            <div>
+              <span>Gender</span>
+              <strong>
+                {patientProfile?.gender
+                  ? formatStatus(patientProfile.gender)
+                  : "Not specified"}
+              </strong>
+            </div>
+
+            <div>
+              <span>Account Role</span>
+              <strong>{user.role || "Patient"}</strong>
+            </div>
+
+            <div>
+              <span>Patient ID</span>
+              <strong>{patientProfile?.id || user.profileId || "Not available"}</strong>
+            </div>
+
+            <div>
+              <span>Account Status</span>
+              <strong>
+                {isActive === undefined
+                  ? "Not available"
+                  : isActive
+                    ? "Active"
+                    : "Inactive"}
+              </strong>
+            </div>
+          </div>
+        )}
+
+        <div className="content-card">
+          <div className="section-heading">
+            <div>
+              <h3>Medical History</h3>
+              <p>Medical history information saved in your patient profile.</p>
+            </div>
           </div>
 
-          <div>
-            <span>Email Address</span>
-            <strong>{user.email || "Not available"}</strong>
-          </div>
-
-          <div>
-            <span>Account Role</span>
-            <strong>{user.role || "Patient"}</strong>
-          </div>
-
-          <div>
-            <span>Patient ID</span>
-            <strong>{user.profileId || "Not available"}</strong>
-          </div>
+          <p>
+            {patientProfile?.medical_history ||
+              "No medical history has been recorded."}
+          </p>
         </div>
 
         <p className="profile-note">
-          Your profile information is retrieved from your authenticated
-          account. Profile editing can be added when the backend supports it.
+          Your email address and medical history cannot be changed from this
+          personal profile form. Contact the clinic if this information needs
+          to be reviewed.
         </p>
       </div>
     );

@@ -1,27 +1,34 @@
+
 const request = require('supertest');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 jest.mock('../models/userModel');
 jest.mock('../models/doctorModel');
 jest.mock('../models/patientModel');
+
 const userModel = require('../models/userModel');
 const doctorModel = require('../models/doctorModel');
 const patientModel = require('../models/patientModel');
+
 const app = require('../server');
+
 describe('Auth API', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
-test('allows the local frontend to submit registration requests', async () => {
-    const response = await request(app)
-        .options('/auth/register')
-        .set('Origin', 'http://localhost:5173')
-        .set('Access-Control-Request-Method', 'POST')
-        .set('Access-Control-Request-Headers', 'content-type');
 
-    expect(response.headers['access-control-allow-origin'])
-        .toBe('http://localhost:5173');
-});
+    test('allows the local frontend to submit registration requests', async () => {
+        const response = await request(app)
+            .options('/auth/register')
+            .set('Origin', 'http://localhost:5173')
+            .set('Access-Control-Request-Method', 'POST')
+            .set('Access-Control-Request-Headers', 'content-type');
+
+        expect(response.headers['access-control-allow-origin'])
+            .toBe('http://localhost:5173');
+    });
+
     test('POST /auth/register should reject invalid email', async () => {
         const response = await request(app)
             .post('/auth/register')
@@ -34,19 +41,15 @@ test('allows the local frontend to submit registration requests', async () => {
         expect(response.statusCode).toBe(400);
     });
 
-    test('POST /auth/register should register a patient successfully', async () => {
-
+    test('POST /auth/register should register a patient successfully using a transaction', async () => {
         userModel.findUserByEmail.mockResolvedValue(null);
 
-        userModel.createUser.mockResolvedValue({
-            id: 100,
-            email: 'test@example.com',
-            role: 'patient'
-        });
-
-        patientModel.createPatient.mockResolvedValue({
+        patientModel.createPatientWithUser.mockResolvedValue({
             id: 50,
             name: 'Test User',
+            phone: '+12025550123',
+            age: 25,
+            gender: 'male',
             user_id: 100
         });
 
@@ -55,7 +58,10 @@ test('allows the local frontend to submit registration requests', async () => {
             .send({
                 username: 'Test User',
                 email: 'test@example.com',
-                password: '123456'
+                password: '123456',
+                phone: '+12025550123',
+                age: 25,
+                gender: 'male'
             });
 
         expect(response.statusCode).toBe(201);
@@ -67,15 +73,32 @@ test('allows the local frontend to submit registration requests', async () => {
             email: 'test@example.com',
             role: 'patient'
         });
+
         expect(userModel.findUserByEmail)
             .toHaveBeenCalledWith('test@example.com');
-        expect(userModel.createUser)
-            .toHaveBeenCalled();
-        expect(patientModel.createPatient)
-            .toHaveBeenCalled();
+
+        expect(patientModel.createPatientWithUser)
+            .toHaveBeenCalledWith(
+                expect.objectContaining({
+                    email: 'test@example.com',
+                    role: 'patient'
+                }),
+                expect.objectContaining({
+                    username: 'Test User',
+                    phone: '+12025550123',
+                    age: 25,
+                    gender: 'male'
+                })
+            );
+
+        expect(userModel.createUser).not.toHaveBeenCalled();
+        expect(patientModel.createPatient).not.toHaveBeenCalled();
+        expect(doctorModel.createDoctor).not.toHaveBeenCalled();
     });
+
     test('POST /auth/login should reject deactivated users', async () => {
         const hashedPassword = await bcrypt.hash('123456', 10);
+
         userModel.findUserByEmail.mockResolvedValue({
             id: 200,
             email: 'inactive@example.com',
@@ -85,16 +108,20 @@ test('allows the local frontend to submit registration requests', async () => {
             patient: null,
             doctor: null
         });
+
         const response = await request(app)
             .post('/auth/login')
             .send({
                 email: 'inactive@example.com',
                 password: '123456'
             });
+
         expect(response.statusCode).toBe(403);
+
         expect(response.body.error)
             .toBe('Your account has been deactivated. Please contact the administrator.');
     });
+
     test('protected routes should reject tokens belonging to deactivated users', async () => {
         const token = jwt.sign(
             {
@@ -106,18 +133,23 @@ test('allows the local frontend to submit registration requests', async () => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
+
         userModel.findUserById.mockResolvedValue({
             id: 200,
             email: 'inactive@example.com',
             role: 'admin',
             isActive: false
         });
+
         const response = await request(app)
             .get('/patients')
             .set('Authorization', `Bearer ${token}`);
+
         expect(response.statusCode).toBe(403);
+
         expect(response.body.error)
             .toBe('Your account has been deactivated');
+
         expect(userModel.findUserById)
             .toHaveBeenCalledWith(200);
     });

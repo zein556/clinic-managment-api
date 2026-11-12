@@ -1,10 +1,13 @@
+
 import { useEffect, useMemo, useState } from "react";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminHeader from "../components/admin/AdminHeader";
 import DoctorForm from "../components/admin/DoctorForm";
+import PatientForm from "../components/admin/PatientForm";
 
 import {
   getDoctors,
+  getDoctorById,
   createDoctor,
   updateDoctor,
   deleteDoctor,
@@ -12,6 +15,8 @@ import {
 
 import {
   getPatients,
+  createPatient,
+  updatePatient,
   deactivatePatient,
   activatePatient,
 } from "../services/patientService";
@@ -64,8 +69,21 @@ function AdminDashboard() {
   const [busyAppointmentId, setBusyAppointmentId] = useState(null);
   const [busyPatientId, setBusyPatientId] = useState(null);
 
+  // Patient form and details states.
+  const [patientFormOpen, setPatientFormOpen] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
+  const [savingPatient, setSavingPatient] = useState(false);
+
+  const [patientDetailsOpen, setPatientDetailsOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+
+  // Doctor form and details states.
   const [doctorFormOpen, setDoctorFormOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
+
+  const [doctorDetailsOpen, setDoctorDetailsOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [loadingDoctorDetails, setLoadingDoctorDetails] = useState(false);
 
   const [clinicForm, setClinicForm] = useState({
     name: "",
@@ -130,9 +148,11 @@ function AdminDashboard() {
     );
   }, [patients, patientSearch]);
 
+  // Calculate dashboard statistics.
   const stats = useMemo(
     () => ({
       doctors: doctors.length,
+      patients: patients.length,
       appointments: appointments.length,
       pending: appointments.filter(
         (item) => item.status === "pending"
@@ -141,7 +161,7 @@ function AdminDashboard() {
         (item) => item.status === "completed"
       ).length,
     }),
-    [doctors, appointments]
+    [doctors, patients, appointments]
   );
 
   // Load dashboard information.
@@ -278,6 +298,7 @@ function AdminDashboard() {
     setSuccess("");
   }
 
+  // Open doctor forms.
   function openCreateDoctor() {
     setEditingDoctor(null);
     setDoctorFormOpen(true);
@@ -288,6 +309,31 @@ function AdminDashboard() {
     setDoctorFormOpen(true);
   }
 
+  // Open doctor details and retrieve the latest information.
+  async function openDoctorDetails(doctor) {
+    setSelectedDoctor(doctor);
+    setDoctorDetailsOpen(true);
+    setLoadingDoctorDetails(true);
+    setError("");
+
+    try {
+      const result = await getDoctorById(doctor.id);
+      setSelectedDoctor(result.doctor || result);
+    } catch (err) {
+      setError(err.message || "Could not load doctor details.");
+    } finally {
+      setLoadingDoctorDetails(false);
+    }
+  }
+
+  // Close doctor details window.
+  function closeDoctorDetails() {
+    setDoctorDetailsOpen(false);
+    setSelectedDoctor(null);
+    setLoadingDoctorDetails(false);
+  }
+
+  // Open clinic editor.
   function openClinicEditor() {
     if (!clinic) return;
 
@@ -404,6 +450,83 @@ function AdminDashboard() {
     }
   }
 
+  // Open the form to create a new patient.
+  function openCreatePatient() {
+    setEditingPatient(null);
+    setPatientFormOpen(true);
+    setError("");
+    setSuccess("");
+  }
+
+  // Open the form to edit an existing patient.
+  function openEditPatient(patient) {
+    setEditingPatient(patient);
+    setPatientFormOpen(true);
+    setError("");
+    setSuccess("");
+  }
+
+  // Open the patient details window.
+  function openPatientDetails(patient) {
+    setSelectedPatient(patient);
+    setPatientDetailsOpen(true);
+  }
+
+  // Close the patient details window.
+  function closePatientDetails() {
+    setPatientDetailsOpen(false);
+    setSelectedPatient(null);
+  }
+
+  // Create or update a patient.
+  async function savePatient(payload) {
+    setSavingPatient(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      if (editingPatient) {
+        const result = await updatePatient(editingPatient.id, payload);
+
+        const updatedPatient = result.patient || {
+          ...editingPatient,
+          name: payload.username,
+          phone: payload.phone,
+          ...(payload.age !== undefined && { age: payload.age }),
+          ...(payload.gender !== undefined && { gender: payload.gender }),
+        };
+
+        setPatients((items) =>
+          items.map((item) =>
+            item.id === editingPatient.id
+              ? {
+                  ...item,
+                  ...updatedPatient,
+                  user: item.user,
+                }
+              : item
+          )
+        );
+
+        setSuccess("Patient information updated successfully.");
+      } else {
+        await createPatient(payload);
+
+        const updatedPatients = await getPatients();
+        setPatients(updatedPatients);
+
+        setSuccess("Patient account created successfully.");
+      }
+
+      setPatientFormOpen(false);
+      setEditingPatient(null);
+    } catch (err) {
+      setError(err.message || "Could not save patient.");
+    } finally {
+      setSavingPatient(false);
+    }
+  }
+
   // Deactivate a patient without deleting their information.
   async function handleDeactivatePatient(patient) {
     const patientName =
@@ -500,6 +623,7 @@ function AdminDashboard() {
     }
   }
 
+  // Log out the administrator.
   function logout() {
     ["token", "user", "clinic-token", "clinic-user"].forEach((key) =>
       localStorage.removeItem(key)
@@ -557,6 +681,13 @@ function AdminDashboard() {
 
                 <td>
                   <div className="admin-row-actions">
+                    <button
+                      className="admin-button small secondary"
+                      onClick={() => openDoctorDetails(doctor)}
+                    >
+                      View
+                    </button>
+
                     <button
                       className="admin-button small secondary"
                       onClick={() => openEditDoctor(doctor)}
@@ -644,6 +775,22 @@ function AdminDashboard() {
 
                   <td>
                     <div className="admin-row-actions">
+                      <button
+                        className="admin-button small secondary"
+                        disabled={isBusy}
+                        onClick={() => openPatientDetails(patient)}
+                      >
+                        View
+                      </button>
+
+                      <button
+                        className="admin-button small secondary"
+                        disabled={isBusy}
+                        onClick={() => openEditPatient(patient)}
+                      >
+                        Edit
+                      </button>
+
                       {isActive ? (
                         <button
                           className="admin-button small danger"
@@ -925,6 +1072,7 @@ function AdminDashboard() {
                   <div className="admin-stat-grid">
                     {[
                       ["Registered doctors", stats.doctors, "Doctors in the clinic", "✚"],
+                      ["Registered patients", stats.patients, "Patients in the clinic", "♙"],
                       ["Total appointments", stats.appointments, "All scheduled visits", "▦"],
                       ["Pending appointments", stats.pending, "Awaiting action", "◷"],
                       ["Completed appointments", stats.completed, "Finished consultations", "✓"],
@@ -1024,9 +1172,12 @@ function AdminDashboard() {
                       </p>
                     </div>
 
-                    <span className="admin-count">
-                      {patients.length} patients
-                    </span>
+                    <button
+                      className="admin-button primary"
+                      onClick={openCreatePatient}
+                    >
+                      ＋ Add patient
+                    </button>
                   </div>
 
                   <div className="admin-toolbar">
@@ -1094,6 +1245,140 @@ function AdminDashboard() {
         </section>
       </main>
 
+      {/* Patient create/edit form */}
+      {patientFormOpen && (
+        <PatientForm
+          patient={editingPatient}
+          saving={savingPatient}
+          onSubmit={savePatient}
+          onCancel={() => {
+            if (!savingPatient) {
+              setPatientFormOpen(false);
+              setEditingPatient(null);
+            }
+          }}
+        />
+      )}
+
+      {/* Patient details modal */}
+      {patientDetailsOpen && selectedPatient && (
+        <div className="admin-modal-backdrop">
+          <div className="admin-modal">
+            <div className="admin-modal-heading">
+              <div>
+                <small>PATIENT INFORMATION</small>
+                <h2>Patient Details</h2>
+                <p>
+                  View the patient's personal and medical information.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="admin-modal-close"
+                onClick={closePatientDetails}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="admin-form-grid">
+              <label>
+                Patient ID
+                <input
+                  value={selectedPatient.id ?? "—"}
+                  readOnly
+                />
+              </label>
+
+              <label>
+                Full name
+                <input
+                  value={
+                    selectedPatient.name ||
+                    selectedPatient.username ||
+                    "—"
+                  }
+                  readOnly
+                />
+              </label>
+
+              <label className="admin-full-field">
+                Email
+                <input
+                  value={
+                    selectedPatient.user?.email ||
+                    selectedPatient.email ||
+                    "—"
+                  }
+                  readOnly
+                />
+              </label>
+
+              <label>
+                Phone
+                <input
+                  value={selectedPatient.phone || "—"}
+                  readOnly
+                />
+              </label>
+
+              <label>
+                Age
+                <input
+                  value={selectedPatient.age ?? "—"}
+                  readOnly
+                />
+              </label>
+
+              <label>
+                Gender
+                <input
+                  value={selectedPatient.gender || "—"}
+                  readOnly
+                />
+              </label>
+
+              <label>
+                Account status
+                <input
+                  value={
+                    selectedPatient.user?.isActive === false
+                      ? "Deactivated"
+                      : "Active"
+                  }
+                  readOnly
+                />
+              </label>
+
+              <label className="admin-full-field">
+                Medical history
+                <textarea
+                  value={
+                    selectedPatient.medical_history ||
+                    "No medical history available."
+                  }
+                  readOnly
+                  rows={4}
+                />
+              </label>
+            </div>
+
+            <div className="admin-modal-actions">
+              <button
+                type="button"
+                className="admin-button secondary"
+                onClick={closePatientDetails}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Doctor create/edit form */}
       {doctorFormOpen && (
         <DoctorForm
           doctor={editingDoctor}
@@ -1108,6 +1393,125 @@ function AdminDashboard() {
         />
       )}
 
+      {/* Doctor details modal */}
+      {doctorDetailsOpen && (
+        <div className="admin-modal-backdrop">
+          <div className="admin-modal">
+            <div className="admin-modal-heading">
+              <div>
+                <small>DOCTOR INFORMATION</small>
+                <h2>Doctor Details</h2>
+                <p>
+                  View the doctor's personal and professional information.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="admin-modal-close"
+                onClick={closeDoctorDetails}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            {loadingDoctorDetails ? (
+              <div className="admin-loading">
+                Loading doctor details…
+              </div>
+            ) : selectedDoctor ? (
+              <>
+                <div className="admin-form-grid">
+                  <label>
+                    Doctor ID
+                    <input
+                      value={selectedDoctor.id ?? "—"}
+                      readOnly
+                    />
+                  </label>
+
+                  <label>
+                    Full name
+                    <input
+                      value={
+                        selectedDoctor.name ||
+                        selectedDoctor.username ||
+                        "—"
+                      }
+                      readOnly
+                    />
+                  </label>
+
+                  <label>
+                    Specialty
+                    <input
+                      value={selectedDoctor.specialty || "—"}
+                      readOnly
+                    />
+                  </label>
+
+                  <label>
+                    Phone
+                    <input
+                      value={selectedDoctor.phone || "—"}
+                      readOnly
+                    />
+                  </label>
+
+                  <label className="admin-full-field">
+                    Email
+                    <input
+                      value={
+                        selectedDoctor.user?.email ||
+                        selectedDoctor.email ||
+                        "—"
+                      }
+                      readOnly
+                    />
+                  </label>
+
+                  <label>
+                    User ID
+                    <input
+                      value={
+                        selectedDoctor.user?.id ??
+                        selectedDoctor.user_id ??
+                        "—"
+                      }
+                      readOnly
+                    />
+                  </label>
+
+                  <label>
+                    Account role
+                    <input
+                      value={selectedDoctor.user?.role || "—"}
+                      readOnly
+                    />
+                  </label>
+                </div>
+
+                <div className="admin-modal-actions">
+                  <button
+                    type="button"
+                    className="admin-button secondary"
+                    onClick={closeDoctorDetails}
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="admin-empty">
+                Doctor information is not available.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Clinic edit modal */}
       {clinicForm.name !== "" && (
         <div className="admin-modal-backdrop">
           <form className="admin-modal" onSubmit={saveClinic}>
