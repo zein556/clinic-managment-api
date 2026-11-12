@@ -5,7 +5,8 @@ generated/
 .claude/
 .windsurf/
 skills-lock.json
-
+.env
+.env.*
 # Local database helper scripts
 migrateClinicData.js
 checkClinic.js
